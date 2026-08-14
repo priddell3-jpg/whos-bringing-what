@@ -426,7 +426,7 @@ function renderEvent(){
         const lbl = Math.abs(r.bal)<0.01?"all square":(r.bal>0?`gets back ${money(r.bal)}`:`owes ${money(-r.bal)}`);
         return `<div class="sumrow"><div class="nm">${esc(r.name)}${r.name===state.me?" (you)":""}<span class="paid">paid ${money(r.paid)}</span></div><div class="bal ${cls}">${lbl}</div></div>`;
       }).join("")}
-      <div class="hint" style="margin-top:8px">Rough split — divides the total evenly across everyone coming (plus guests). Full settle-up comes with the shared version.</div>
+      <div class="hint" style="margin-top:8px">Even split — the total is divided equally across everyone coming (plus guests), and each person's balance is what they paid minus their share.</div>
     </div>` : "";
 
   const neededHtml = needed.length ? needed.map(it => `
