@@ -307,7 +307,7 @@ function copyInvite(){
   const ev=currentEvent();
   const txt = CLOUD
     ? `Join "${ev.name}" — add what you're bringing: ${location.href.split("#")[0]}`
-    : `Join "${ev.name}" and add what you're bringing! (the link works once this is the live/shared version)`;
+    : `Join "${ev.name}" and add what you're bringing! (this list is saved on my device only, so there's no link to open — tell me what you're bringing and I'll add it)`;
   try{ navigator.clipboard.writeText(txt); toast(CLOUD ? "Invite link copied" : "Invite text copied"); }
   catch(e){ toast("Copy not available here"); }
 }
