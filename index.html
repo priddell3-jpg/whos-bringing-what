@@ -458,7 +458,7 @@ function renderEvent(){
     ? att.map(a=>`<span class="chip"><b>${esc(a.name)}</b>${a.name===state.me?" ✓":""}${a.guests?`<span class="g">+${a.guests}</span>`:""}</span>`).join("")
     : `<span class="hint">No RSVPs yet — tap "I'm coming".</span>`;
   const rsvpControl = mine
-    ? `<div class="stepper"><span class="hint">You're in · guests</span><button onclick="setGuests(-1)">−</button><b>${mine.guests||0}</b><button onclick="setGuests(1)">+</button><button class="btn sm ghost" onclick="rsvpOut()">Remove</button></div>`
+    ? `<div class="stepper"><span class="hint">You're in · guests</span><button onclick="setGuests(-1)">−</button><b>${mine.guests||0}</b><button onclick="setGuests(1)">+</button><button class="btn sm ghost" onclick="rsvpOut()">Can't make it</button></div>`
     : `<button class="btn go sm" onclick="rsvpIn()">I'm coming</button>`;
   const rsvpHtml = `<div class="card rsvp">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
