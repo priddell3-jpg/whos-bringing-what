@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f141f">
+<title>Who's Bringing What</title>
+<style>
+  :root{
+    --bg:#0f141f; --panel:#17203180; --panel-s:#172031; --panel2:#1f2c44; --line:#2a3a58;
+    --text:#eef2f9; --muted:#9db0d0; --accent:#5b8cff; --accent-d:#3f6fe0;
+    --go:#22c55e; --go-d:#16a34a; --need:#f5a524; --danger:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:0 16px 80px}
+  button{font-family:inherit}
+
+  .banner{background:#1a2740; border-bottom:1px solid var(--line); color:var(--muted);
+    font-size:12.5px; text-align:center; padding:7px 16px}
+  .banner b{color:var(--text)}
+
+  header{padding:20px 16px 10px; max-width:640px; margin:0 auto}
+  .hrow{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  h1{font-size:24px; margin:0; letter-spacing:.2px}
+  .sub{color:var(--muted); font-size:13.5px; margin:2px 0 0}
+  .who{font-size:13px; color:var(--muted); white-space:nowrap}
+  .who b{color:var(--text)}
+  .link{color:var(--accent); cursor:pointer; text-decoration:none}
+  .link:hover{text-decoration:underline}
+
+  .card{background:var(--panel-s); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; margin:10px 0}
+  .event-card{cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .event-card:hover{background:var(--panel2); transform:translateY(-1px)}
+  .event-card h3{margin:0 0 3px; font-size:18px}
+  .event-card .meta{color:var(--muted); font-size:13px}
+  .chev{color:var(--muted); font-size:22px}
+
+  .pillstat{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
+    padding:3px 9px; border-radius:999px; border:1px solid var(--line)}
+  .pillstat.need{color:#ffcf87; background:rgba(245,165,36,.12)}
+  .pillstat.got{color:#8ff0b0; background:rgba(34,197,94,.12)}
+
+  .btn{cursor:pointer; border:1px solid var(--line); background:var(--panel2); color:var(--text);
+    border-radius:10px; padding:10px 14px; font-size:14.5px; font-weight:600; transition:.15s}
+  .btn:hover{filter:brightness(1.12)}
+  .btn.block{display:block; width:100%; text-align:center}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.go{background:var(--go); border-color:var(--go); color:#04240f}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:7px 11px; font-size:13px; border-radius:9px}
+  .btn.danger{color:var(--danger); border-color:#5b2b34; background:#2a1720}
+
+  input, textarea{
+    width:100%; background:#0c1320; border:1px solid var(--line); color:var(--text);
+    border-radius:10px; padding:11px 12px; font-size:15px; font-family:inherit; margin:0;
+  }
+  input:focus, textarea:focus{outline:none; border-color:var(--accent)}
+  label.fld{display:block; font-size:12.5px; color:var(--muted); margin:12px 0 5px; font-weight:600}
+
+  .section-title{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted);
+    margin:22px 0 6px; font-weight:700}
+  .item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--panel-s);
+    border:1px solid var(--line); border-radius:12px; margin:8px 0}
+  .item.got{border-left:3px solid var(--go)}
+  .item.need{border-left:3px solid var(--need)}
+  .item .body{flex:1; min-width:0}
+  .item .title{font-weight:650; font-size:15.5px}
+  .item .note{color:var(--muted); font-size:13px; margin-top:2px; word-wrap:break-word}
+  .item .by{font-size:13px; margin-top:3px; color:#8ff0b0; font-weight:600}
+  .item .actions{display:flex; flex-direction:column; gap:6px; align-items:flex-end}
+
+  .empty{color:var(--muted); font-size:14px; text-align:center; padding:18px; border:1px dashed var(--line);
+    border-radius:12px; margin:8px 0}
+  .row{display:flex; gap:8px}
+  .row > *{flex:1}
+  .toolbar{display:flex; gap:8px; margin-top:8px}
+  .back{cursor:pointer; color:var(--muted); font-size:14px; display:inline-flex; align-items:center; gap:6px; margin:4px 0 2px}
+  .back:hover{color:var(--text)}
+  .share{display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:#101a2b; border:1px dashed var(--line);
+    border-radius:12px; padding:10px 12px; font-size:13px; color:var(--muted); margin-top:10px}
+  .code{font-family:ui-monospace,Menlo,monospace; color:var(--text); background:#0c1320; border:1px solid var(--line);
+    padding:2px 8px; border-radius:7px}
+  .hint{color:var(--muted); font-size:12.5px; margin-top:6px}
+  .center{max-width:400px; margin:8vh auto 0; text-align:center; padding:0 16px}
+  .center h1{font-size:26px; margin-bottom:6px}
+  .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--panel2);
+    border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:10px; font-size:14px;
+    box-shadow:0 8px 24px #0008; opacity:0; pointer-events:none; transition:.2s}
+  .toast.show{opacity:1}
+
+  /* RSVP + cost additions */
+  .rsvp{margin-top:10px}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+  .chip{display:inline-flex; align-items:center; gap:5px; background:var(--panel2); border:1px solid var(--line);
+    border-radius:999px; padding:4px 10px; font-size:13px}
+  .chip b{color:var(--text)} .chip .g{color:var(--muted); font-size:12px}
+  .stepper{display:inline-flex; align-items:center; gap:8px}
+  .stepper button{width:30px; height:30px; border-radius:8px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); font-size:17px; cursor:pointer; line-height:1}
+  .stepper button:hover{filter:brightness(1.15)}
+  .cost{color:#8ff0b0; font-weight:700; font-size:13.5px; margin-left:6px}
+  .cost.est{color:var(--muted); font-weight:600}
+  .sumcard{background:#101a2b; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin:14px 0}
+  .sumtop{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px}
+  .sumtop .big{font-size:22px; font-weight:800}
+  .sumtop .per{color:var(--muted); font-size:13.5px}
+  .sumrow{display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid var(--line); font-size:14px}
+  .sumrow .nm{font-weight:600}
+  .sumrow .paid{color:var(--muted); font-size:12.5px; margin-left:6px; font-weight:400}
+  .bal.pos{color:#8ff0b0; font-weight:700} .bal.neg{color:#ffcf87; font-weight:700} .bal.even{color:var(--muted)}
+  .pillstat.cost{color:#8ff0b0; background:rgba(34,197,94,.12)}
+
+  /* segmented toggle + packing lists */
+  .seg{display:inline-flex; background:#0c1320; border:1px solid var(--line); border-radius:10px; padding:3px; margin:6px 0 4px}
+  .seg-btn{border:none; background:transparent; color:var(--muted); font-weight:600; font-size:13.5px;
+    padding:7px 12px; border-radius:8px; cursor:pointer}
+  .seg-btn.active{background:var(--panel2); color:var(--text)}
+  .pack{background:var(--panel-s); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:8px 0}
+  .pack-owner{font-weight:700; font-size:14.5px; margin-bottom:8px}
+  .pack-owner .tag{font-size:11.5px; font-weight:600; color:var(--muted); background:var(--panel2);
+    border:1px solid var(--line); border-radius:999px; padding:2px 8px; margin-left:6px}
+  .pack-items{display:flex; flex-wrap:wrap; gap:6px}
+  .pchip{display:inline-flex; align-items:center; gap:6px; background:#0c1320; border:1px solid var(--line);
+    border-radius:999px; padding:5px 11px; font-size:13.5px}
+  .pchip .x{cursor:pointer; color:var(--muted); font-weight:700}
+  .pchip .x:hover{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="banner">🎈 <b>Demo preview</b> — saves on this device only. Syncing across everyone's phones is the next step.</div>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Your keys live in config.js. If it's missing/blank, the app runs as the on-device demo. -->
+<script src="config.js"></script>
+<script>
+/* ============================================================
+   Who's Bringing What — no-backend demo
+   State lives in the browser (localStorage if available, else memory).
+   ============================================================ */
+/* ============================================================
+   CONFIG — paste your two Supabase keys here to go LIVE & SHARED.
+   Leave them blank and it runs as the on-your-device demo.
+   ============================================================ */
+const CFG = (typeof window !== "undefined" && window.WBW_CONFIG) ? window.WBW_CONFIG : {};
+const CONFIG = {
+  SUPABASE_URL: CFG.SUPABASE_URL || "",       // set these in config.js
+  SUPABASE_ANON_KEY: CFG.SUPABASE_ANON_KEY || "",
+};
+
+const CLOUD = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase);
+const sb = CLOUD ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+/* device-local: just your name + where you are in the app */
+const LKEY = "wbw_local_v1";
+function saveLocal(){ try{ localStorage.setItem(LKEY, JSON.stringify({me:state.me, view:state.view, currentId:state.currentId})); }catch(e){} }
+function loadLocal(){ try{ return JSON.parse(localStorage.getItem(LKEY)) || {}; }catch(e){ return {}; } }
+
+/* demo-mode events (used only when there are no Supabase keys) */
+const EKEY = "wbw_events_v1";
+function saveDemoEvents(){ try{ localStorage.setItem(EKEY, JSON.stringify(state.events)); }catch(e){} }
+function loadDemoEvents(){ try{ const s=localStorage.getItem(EKEY); return s?JSON.parse(s):seedEvents(); }catch(e){ return seedEvents(); } }
+
+function seedEvents(){
+  return [
+    { id:"bbq123", name:"Sarah's Backyard BBQ", when:"Sat Aug 23, 6pm", where:"Sarah's place",
+      attendees:[{name:"Marcus",guests:0},{name:"Priya",guests:1}],
+      items:[
+        {id:uid(), title:"Burgers & buns", note:"for ~10 people", broughtBy:"Marcus", cost:42},
+        {id:uid(), title:"Speaker / playlist", note:"", broughtBy:"Priya", cost:null},
+        {id:uid(), title:"Ice & drinks", note:"cooler too if you have one", broughtBy:null, cost:null},
+        {id:uid(), title:"A dessert", note:"", broughtBy:null, cost:null},
+        {id:uid(), title:"Folding chairs", note:"we're short a few", broughtBy:null, cost:null},
+      ] },
+  ];
+}
+
+let state = { me:null, view:"home", currentId:null, events:[] };
+
+/* ---- persistence: cloud (shared) or local (demo) ---- */
+function save(){
+  saveLocal();
+  if(CLOUD){ const ev = currentEvent(); if(ev) cloudUpsert(ev); }
+  else { saveDemoEvents(); }
+}
+async function cloudUpsert(ev){
+  try{
+    const { error } = await sb.from("events").upsert({ id:ev.id, data:ev, updated_at:new Date().toISOString() });
+    if(error) console.error("save error:", error.message);
+  }catch(e){ console.error(e); }
+}
+async function cloudLoad(){
+  try{
+    const { data, error } = await sb.from("events").select("*").order("updated_at",{ascending:false});
+    if(error){ console.error("load error:", error.message); return; }
+    state.events = data.map(r => r.data);
+    render();
+  }catch(e){ console.error(e); }
+}
+function subscribeRT(){
+  try{ sb.channel("events-rt")
+        .on("postgres_changes",{event:"*",schema:"public",table:"events"}, () => cloudLoad())
+        .subscribe(); }catch(e){}
+}
+
+/* ---------- helpers ---------- */
+const esc = s => (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const app = () => document.getElementById("app");
+const currentEvent = () => state.events.find(e => e.id === state.currentId);
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 1600);
+}
+function go(view, id){ state.view = view; if(id!==undefined) state.currentId = id; save(); render(); }
+
+function money(n){ if(n==null||n===""||isNaN(n)) return ""; const v=Math.round(n*100)/100; return "$"+(Number.isInteger(v)?v:v.toFixed(2)); }
+function headMap(ev){
+  const m={};
+  (ev.attendees||[]).forEach(a=>{ m[a.name]=(m[a.name]||0)+1+(a.guests||0); });
+  ev.items.forEach(it=>{ if(it.broughtBy && !(it.broughtBy in m)) m[it.broughtBy]=1; });
+  return m;
+}
+function costSummary(ev){
+  const spent={}; let total=0;
+  ev.items.forEach(it=>{ if(!it.personal && it.broughtBy && it.cost){ spent[it.broughtBy]=(spent[it.broughtBy]||0)+it.cost; total+=it.cost; } });
+  const hm=headMap(ev); const totalHeads=Object.values(hm).reduce((a,b)=>a+b,0);
+  const perHead = totalHeads ? total/totalHeads : null;
+  const names=[...new Set([...Object.keys(hm), ...Object.keys(spent)])];
+  const rows=names.map(n=>{ const paid=spent[n]||0; const h=hm[n]||1; const bal=perHead? paid-perHead*h : 0; return {name:n, paid, bal}; })
+                  .sort((a,b)=>b.bal-a.bal);
+  return {total, totalHeads, perHead, rows};
+}
+
+/* ---------- actions ---------- */
+function setName(v){ const n=(v||"").trim(); if(!n) return; state.me=n; save(); render(); }
+function newEvent(){
+  const name=val("ev-name"), when=val("ev-when"), where=val("ev-where");
+  if(!name){ toast("Give your event a name"); return; }
+  const id = uid();
+  state.events.unshift({ id, name, when, where, attendees:[], items:[] });
+  go("event", id);
+  toast("Event created 🎉");
+}
+function addItem(kind){
+  const ev=currentEvent(); if(!ev) return;
+  const title=val("it-title"), note=val("it-note");
+  if(!title){ toast("What's the item?"); return; }
+  const c = parseFloat(val("it-cost"));
+  ev.items.push({ id:uid(), title, note, broughtBy: kind==="bring" ? state.me : null, cost: isNaN(c)?null:c });
+  ["it-title","it-note","it-cost"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+  save(); render();
+  toast(kind==="bring" ? "Added — thanks for bringing it!" : "Added to the needed list");
+}
+
+/* ---- RSVP ---- */
+function attendeesOf(ev){ if(!ev.attendees) ev.attendees=[]; return ev.attendees; }
+function myRsvp(ev){ return attendeesOf(ev).find(a=>a.name===state.me); }
+function rsvpIn(){ const ev=currentEvent(); if(!ev) return; if(!myRsvp(ev)){ attendeesOf(ev).push({name:state.me, guests:0}); save(); render(); toast("You're in 🙌"); } }
+function rsvpOut(){ const ev=currentEvent(); if(!ev) return; ev.attendees = attendeesOf(ev).filter(a=>a.name!==state.me); save(); render(); }
+function setGuests(d){ const ev=currentEvent(); const a=myRsvp(ev); if(!a) return; a.guests=Math.max(0,(a.guests||0)+d); save(); render(); }
+function setAddMode(mode){
+  const group = mode !== "packing";
+  document.getElementById("seg-group").classList.toggle("active", group);
+  document.getElementById("seg-pack").classList.toggle("active", !group);
+  document.getElementById("grp-btns").style.display = group ? "" : "none";
+  document.getElementById("pack-btns").style.display = group ? "none" : "";
+  document.getElementById("cost-wrap").style.display = group ? "" : "none";
+  document.getElementById("add-hint").textContent = group
+    ? "Something the group needs, or that you'll bring for everyone."
+    : "Your own gear to pack. Everyone can see it, but only you can change it.";
+}
+function addPersonal(){
+  const ev=currentEvent(); if(!ev) return;
+  const title=val("it-title"), note=val("it-note");
+  if(!title){ toast("What are you packing?"); return; }
+  ev.items.push({ id:uid(), title, note, personal:true, owner:state.me, broughtBy:null, cost:null });
+  ["it-title","it-note","it-cost"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+  save(); render();
+  toast("Added to your packing list 🎒");
+}
+function claim(itemId){
+  const ev=currentEvent(); const it=ev?.items.find(i=>i.id===itemId); if(!it) return;
+  it.broughtBy = state.me; save(); render(); toast("You've got it 👍");
+}
+function cancelClaim(itemId){
+  const ev=currentEvent(); const it=ev?.items.find(i=>i.id===itemId); if(!it) return;
+  it.broughtBy = null; save(); render();
+}
+function removeItem(itemId){
+  const ev=currentEvent(); if(!ev) return;
+  ev.items = ev.items.filter(i=>i.id!==itemId); save(); render();
+}
+function val(id){ const el=document.getElementById(id); return el ? el.value.trim() : ""; }
+function copyInvite(){
+  const ev=currentEvent();
+  const txt = CLOUD
+    ? `Join "${ev.name}" — add what you're bringing: ${location.href.split("#")[0]}`
+    : `Join "${ev.name}" and add what you're bringing! (the link works once this is the live/shared version)`;
+  try{ navigator.clipboard.writeText(txt); toast(CLOUD ? "Invite link copied" : "Invite text copied"); }
+  catch(e){ toast("Copy not available here"); }
+}
+
+/* ---------- views ---------- */
+function render(){
+  if(!state.me){ renderName(); return; }
+  if(state.view === "event" && currentEvent()){ renderEvent(); return; }
+  renderHome();
+}
+
+function renderName(){
+  app().innerHTML = `
+    <div class="center">
+      <h1>Who's Bringing What</h1>
+      <p class="sub" style="margin-bottom:18px">No sign-ups — just tell us your first name so people know who's bringing what.</p>
+      <input id="name-in" placeholder="Your first name" autofocus onkeydown="if(event.key==='Enter')setName(this.value)">
+      <div style="height:12px"></div>
+      <button class="btn primary block" onclick="setName(document.getElementById('name-in').value)">Let's go</button>
+    </div>`;
+}
+
+function statCounts(ev){
+  const grp = ev.items.filter(i=>!i.personal);
+  const need = grp.filter(i=>!i.broughtBy).length;
+  const got  = grp.filter(i=> i.broughtBy).length;
+  return {need, got};
+}
+
+function renderHome(){
+  const cards = state.events.map(ev => {
+    const {need,got} = statCounts(ev);
+    return `<div class="card event-card" onclick="go('event','${ev.id}')">
+      <div>
+        <h3>${esc(ev.name)}</h3>
+        <div class="meta">${esc(ev.when||"")}${ev.where?" · "+esc(ev.where):""}</div>
+        <div style="margin-top:8px; display:flex; gap:6px">
+          <span class="pillstat need">${need} needed</span>
+          <span class="pillstat got">${got} covered</span>
+        </div>
+      </div>
+      <span class="chev">›</span>
+    </div>`;
+  }).join("");
+
+  app().innerHTML = `
+    <header>
+      <div class="hrow">
+        <div><h1>Who's Bringing What</h1><p class="sub">Your events</p></div>
+        <div class="who">Hi, <b>${esc(state.me)}</b> · <span class="link" onclick="changeName()">change</span></div>
+      </div>
+    </header>
+    <div class="wrap">
+      ${state.events.length ? cards : `<div class="empty">No events yet — create your first one below.</div>`}
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:2px">➕ New event</div>
+        <label class="fld" for="ev-name">Event name</label>
+        <input id="ev-name" placeholder="e.g. Sarah's Backyard BBQ">
+        <div class="row">
+          <div><label class="fld" for="ev-when">When</label><input id="ev-when" placeholder="Sat Aug 23, 6pm"></div>
+          <div><label class="fld" for="ev-where">Where</label><input id="ev-where" placeholder="Sarah's place"></div>
+        </div>
+        <div style="height:12px"></div>
+        <button class="btn primary block" onclick="newEvent()">Create event</button>
+      </div>
+    </div>`;
+}
+
+function renderEvent(){
+  const ev = currentEvent();
+  const {need,got} = statCounts(ev);
+  const needed = ev.items.filter(i=>!i.personal && !i.broughtBy);
+  const covered = ev.items.filter(i=>!i.personal && i.broughtBy);
+
+  // Personal packing lists (visible to all, editable only by owner)
+  const personal = ev.items.filter(i=>i.personal);
+  const owners = [...new Set(personal.map(i=>i.owner))];
+  // put your own list first
+  owners.sort((a,b)=> (a===state.me?-1:0) - (b===state.me?-1:0));
+  const packHtml = personal.length ? owners.map(o=>{
+    const mineOwn = o===state.me;
+    const its = personal.filter(i=>i.owner===o);
+    return `<div class="pack">
+      <div class="pack-owner">${esc(o)}${mineOwn?" (you)":""}<span class="tag">packing · view only</span></div>
+      <div class="pack-items">${its.map(i=>`<span class="pchip">${esc(i.title)}${mineOwn?`<span class="x" onclick="removeItem('${i.id}')">✕</span>`:""}</span>`).join("")}</div>
+    </div>`;
+  }).join("") : `<div class="empty">No packing lists yet — add your own gear below with “My packing”.</div>`;
+
+  // RSVP
+  const att = attendeesOf(ev);
+  const mine = myRsvp(ev);
+  const totalHeads = att.reduce((n,a)=>n+1+(a.guests||0),0);
+  const chips = att.length
+    ? att.map(a=>`<span class="chip"><b>${esc(a.name)}</b>${a.name===state.me?" ✓":""}${a.guests?`<span class="g">+${a.guests}</span>`:""}</span>`).join("")
+    : `<span class="hint">No RSVPs yet — tap "I'm coming".</span>`;
+  const rsvpControl = mine
+    ? `<div class="stepper"><span class="hint">You're in · guests</span><button onclick="setGuests(-1)">−</button><b>${mine.guests||0}</b><button onclick="setGuests(1)">+</button><button class="btn sm ghost" onclick="rsvpOut()">Remove</button></div>`
+    : `<button class="btn go sm" onclick="rsvpIn()">I'm coming</button>`;
+  const rsvpHtml = `<div class="card rsvp">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
+        <div style="font-weight:700">Who's coming <span class="hint">(${totalHeads} incl. guests)</span></div>
+        ${rsvpControl}
+      </div>
+      <div class="chips">${chips}</div>
+    </div>`;
+
+  // Cost split
+  const cs = costSummary(ev);
+  const sumHtml = cs.total>0 ? `<div class="sumcard">
+      <div class="sumtop">
+        <div class="big">${money(cs.total)}</div>
+        <div class="per">spent so far${cs.perHead!=null?` · ≈ ${money(cs.perHead)} each (${cs.totalHeads} ${cs.totalHeads===1?"person":"people"})`:""}</div>
+      </div>
+      ${cs.rows.map(r=>{
+        const cls = Math.abs(r.bal)<0.01?"even":(r.bal>0?"pos":"neg");
+        const lbl = Math.abs(r.bal)<0.01?"all square":(r.bal>0?`gets back ${money(r.bal)}`:`owes ${money(-r.bal)}`);
+        return `<div class="sumrow"><div class="nm">${esc(r.name)}${r.name===state.me?" (you)":""}<span class="paid">paid ${money(r.paid)}</span></div><div class="bal ${cls}">${lbl}</div></div>`;
+      }).join("")}
+      <div class="hint" style="margin-top:8px">Rough split — divides the total evenly across everyone coming (plus guests). Full settle-up comes with the shared version.</div>
+    </div>` : "";
+
+  const neededHtml = needed.length ? needed.map(it => `
+    <div class="item need">
+      <div class="body">
+        <div class="title">${esc(it.title)}${it.cost?`<span class="cost est">~${money(it.cost)}</span>`:""}</div>
+        ${it.note?`<div class="note">${esc(it.note)}</div>`:""}
+      </div>
+      <div class="actions">
+        <button class="btn go sm" onclick="claim('${it.id}')">I'll bring this</button>
+        ${it.broughtBy===null ? `<button class="btn ghost sm" onclick="removeItem('${it.id}')" title="Remove">✕</button>`:""}
+      </div>
+    </div>`).join("") : `<div class="empty">Nothing outstanding — nice! 🎉</div>`;
+
+  const coveredHtml = covered.length ? covered.map(it => `
+    <div class="item got">
+      <div class="body">
+        <div class="title">${esc(it.title)}${it.cost?`<span class="cost">${money(it.cost)}</span>`:""}</div>
+        ${it.note?`<div class="note">${esc(it.note)}</div>`:""}
+        <div class="by">✓ ${esc(it.broughtBy)}${it.broughtBy===state.me?" (you)":""}</div>
+      </div>
+      <div class="actions">
+        ${it.broughtBy===state.me ? `<button class="btn sm ghost" onclick="cancelClaim('${it.id}')">Cancel</button>`:""}
+      </div>
+    </div>`).join("") : `<div class="empty">No one's claimed anything yet.</div>`;
+
+  app().innerHTML = `
+    <header>
+      <div class="back" onclick="go('home')">‹ All events</div>
+      <div class="hrow">
+        <div><h1>${esc(ev.name)}</h1><p class="sub">${esc(ev.when||"")}${ev.where?" · "+esc(ev.where):""}</p></div>
+        <div class="who"><b>${esc(state.me)}</b></div>
+      </div>
+      <div class="share">
+        🔗 ${CLOUD ? "Share link" : "Invite code"} ${CLOUD ? "" : `<span class="code">${esc(ev.id)}</span>`}
+        <button class="btn sm ghost" onclick="copyInvite()">Copy ${CLOUD ? "link" : "invite"}</button>
+        <span>${CLOUD ? "· anyone who opens it shares this live list" : "· becomes a real shareable link in the synced version"}</span>
+      </div>
+    </header>
+    <div class="wrap">
+      <div class="toolbar">
+        <span class="pillstat need">${need} still needed</span>
+        <span class="pillstat got">${got} covered</span>
+      </div>
+
+      ${rsvpHtml}
+
+      <div class="section-title">Still needed</div>
+      ${neededHtml}
+
+      <div class="section-title">Being brought</div>
+      ${coveredHtml}
+
+      ${sumHtml}
+
+      <div class="section-title">Packing lists</div>
+      ${packHtml}
+
+      <div class="card" style="margin-top:22px">
+        <div style="font-weight:700; margin-bottom:2px">➕ Add something</div>
+        <div class="seg">
+          <button id="seg-group" class="seg-btn active" onclick="setAddMode('group')">For the group</button>
+          <button id="seg-pack" class="seg-btn" onclick="setAddMode('packing')">My packing</button>
+        </div>
+        <div class="hint" id="add-hint">Something the group needs, or that you'll bring for everyone.</div>
+        <label class="fld" for="it-title">Item</label>
+        <input id="it-title" placeholder="e.g. Floor pump" onkeydown="if(event.key==='Enter')addItem('need')">
+        <div class="row">
+          <div><label class="fld" for="it-note">Note (optional)</label><input id="it-note" placeholder="e.g. for everyone"></div>
+          <div id="cost-wrap"><label class="fld" for="it-cost">Cost (optional)</label><input id="it-cost" type="number" inputmode="decimal" placeholder="$"></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="row" id="grp-btns">
+          <button class="btn block" onclick="addItem('need')">Add as needed</button>
+          <button class="btn go block" onclick="addItem('bring')">I'm bringing this</button>
+        </div>
+        <div id="pack-btns" style="display:none">
+          <button class="btn primary block" onclick="addPersonal()">Add to my packing list</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function changeName(){ state.me = null; save(); render(); }
+
+/* ---------- boot ---------- */
+const local = loadLocal();
+state.me = local.me || null;
+state.view = local.view || "home";
+state.currentId = local.currentId || null;
+
+if(CLOUD){
+  document.querySelector(".banner").innerHTML =
+    '🟢 <b>Live</b> — everyone with this link shares the same list. Updates appear automatically.';
+  render();
+  cloudLoad();
+  subscribeRT();
+} else {
+  document.querySelector(".banner").innerHTML =
+    '🎈 <b>Demo</b> — saves on this device only. Add your Supabase keys in config.js to make it live &amp; shared.';
+  state.events = loadDemoEvents();
+  render();
+}
+</script>
+</body>
+</html>
