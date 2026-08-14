@@ -105,8 +105,6 @@
   .stepper button{width:30px; height:30px; border-radius:8px; border:1px solid var(--line);
     background:var(--panel2); color:var(--text); font-size:17px; cursor:pointer; line-height:1}
   .stepper button:hover{filter:brightness(1.15)}
-  .cost{color:#8ff0b0; font-weight:700; font-size:13.5px; margin-left:6px}
-  .cost.est{color:var(--muted); font-weight:600}
   .sumcard{background:#101a2b; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin:14px 0}
   .sumtop{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px}
   .sumtop .big{font-size:22px; font-weight:800}
@@ -115,7 +113,28 @@
   .sumrow .nm{font-weight:600}
   .sumrow .paid{color:var(--muted); font-size:12.5px; margin-left:6px; font-weight:400}
   .bal.pos{color:#8ff0b0; font-weight:700} .bal.neg{color:#ffcf87; font-weight:700} .bal.even{color:var(--muted)}
-  .pillstat.cost{color:#8ff0b0; background:rgba(34,197,94,.12)}
+
+  /* event tabs */
+  .tabs{display:flex; gap:4px; background:#0c1320; border:1px solid var(--line); border-radius:12px;
+    padding:4px; margin:12px 0 2px}
+  .tab-btn{flex:1; border:none; background:transparent; color:var(--muted); font-weight:700; font-size:14.5px;
+    padding:9px 12px; border-radius:9px; cursor:pointer}
+  .tab-btn.active{background:var(--panel2); color:var(--text)}
+  .tab-btn:hover:not(.active){color:var(--text)}
+
+  /* expenses */
+  .exp{border-left:3px solid var(--accent)}
+  .exp.settled{border-left-color:var(--go); opacity:.72}
+  .exp .amt{font-weight:800; font-size:15.5px; white-space:nowrap}
+  .badge{display:inline-block; font-size:11.5px; font-weight:700; color:#8ff0b0;
+    background:rgba(34,197,94,.12); border:1px solid var(--line); border-radius:999px; padding:1px 8px}
+  select{width:100%; background:#0c1320; border:1px solid var(--line); color:var(--text);
+    border-radius:10px; padding:11px 12px; font-size:15px; font-family:inherit}
+  select:focus{outline:none; border-color:var(--accent)}
+  .cbx{display:inline-flex; align-items:center; gap:7px; background:#0c1320; border:1px solid var(--line);
+    border-radius:999px; padding:6px 12px; font-size:13.5px; cursor:pointer; user-select:none}
+  .cbx input{width:auto; margin:0; padding:0; accent-color:var(--accent)}
+  .split-grid{display:flex; flex-wrap:wrap; gap:7px; margin-top:5px}
 
   /* segmented toggle + packing lists */
   .seg{display:inline-flex; background:#0c1320; border:1px solid var(--line); border-radius:10px; padding:3px; margin:6px 0 4px}
@@ -177,16 +196,19 @@ function seedEvents(){
     { id:"bbq123", name:"Sarah's Backyard BBQ", when:"Sat Aug 23, 6pm", where:"Sarah's place",
       attendees:[{name:"Marcus",guests:0},{name:"Priya",guests:1}],
       items:[
-        {id:uid(), title:"Burgers & buns", note:"for ~10 people", broughtBy:"Marcus", cost:42},
-        {id:uid(), title:"Speaker / playlist", note:"", broughtBy:"Priya", cost:null},
-        {id:uid(), title:"Ice & drinks", note:"cooler too if you have one", broughtBy:null, cost:null},
-        {id:uid(), title:"A dessert", note:"", broughtBy:null, cost:null},
-        {id:uid(), title:"Folding chairs", note:"we're short a few", broughtBy:null, cost:null},
+        {id:uid(), title:"Burgers & buns", note:"for ~10 people", broughtBy:"Marcus"},
+        {id:uid(), title:"Speaker / playlist", note:"", broughtBy:"Priya"},
+        {id:uid(), title:"Ice & drinks", note:"cooler too if you have one", broughtBy:null},
+        {id:uid(), title:"A dessert", note:"", broughtBy:null},
+        {id:uid(), title:"Folding chairs", note:"we're short a few", broughtBy:null},
+      ],
+      expenses:[
+        {id:uid(), title:"Burgers & buns", amount:42, paidBy:"Marcus", splitBetween:["Marcus","Priya"], settled:false},
       ] },
   ];
 }
 
-let state = { me:null, view:"home", currentId:null, events:[] };
+let state = { me:null, view:"home", currentId:null, tab:"bringing", events:[] };
 
 /* ---- persistence: cloud (shared) or local (demo) ---- */
 function save(){
@@ -223,24 +245,34 @@ function toast(msg){
   t.textContent = msg; t.classList.add("show");
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 1600);
 }
-function go(view, id){ state.view = view; if(id!==undefined) state.currentId = id; save(); render(); }
+function go(view, id){ state.view = view; if(id!==undefined) state.currentId = id; if(view==="event") state.tab="bringing"; save(); render(); }
+function setTab(t){ state.tab = t==="costs" ? "costs" : "bringing"; render(); }
 
 function money(n){ if(n==null||n===""||isNaN(n)) return ""; const v=Math.round(n*100)/100; return "$"+(Number.isInteger(v)?v:v.toFixed(2)); }
-function headMap(ev){
-  const m={};
-  (ev.attendees||[]).forEach(a=>{ m[a.name]=(m[a.name]||0)+1+(a.guests||0); });
-  ev.items.forEach(it=>{ if(it.broughtBy && !(it.broughtBy in m)) m[it.broughtBy]=1; });
-  return m;
-}
-function costSummary(ev){
-  const spent={}; let total=0;
-  ev.items.forEach(it=>{ if(!it.personal && it.broughtBy && it.cost){ spent[it.broughtBy]=(spent[it.broughtBy]||0)+it.cost; total+=it.cost; } });
-  const hm=headMap(ev); const totalHeads=Object.values(hm).reduce((a,b)=>a+b,0);
-  const perHead = totalHeads ? total/totalHeads : null;
-  const names=[...new Set([...Object.keys(hm), ...Object.keys(spent)])];
-  const rows=names.map(n=>{ const paid=spent[n]||0; const h=hm[n]||1; const bal=perHead? paid-perHead*h : 0; return {name:n, paid, bal}; })
-                  .sort((a,b)=>b.bal-a.bal);
-  return {total, totalHeads, perHead, rows};
+function expensesOf(ev){ if(!ev.expenses) ev.expenses=[]; return ev.expenses; }
+
+/* Splitwise-style settle-up.
+   Each UNSETTLED expense is divided equally among its splitBetween people only.
+   Settled expenses still count toward "spent" but are left out of the balances. */
+function settleUp(ev){
+  const exps = expensesOf(ev);
+  const paid={}, owed={};
+  let total=0, settledTotal=0;
+  exps.forEach(x=>{
+    const amt = Number(x.amount)||0;
+    total += amt;
+    if(x.settled){ settledTotal += amt; return; }
+    if(x.paidBy) paid[x.paidBy] = (paid[x.paidBy]||0) + amt;
+    const split = (x.splitBetween||[]).filter(Boolean);
+    if(split.length){
+      const share = amt/split.length;
+      split.forEach(n=>{ owed[n] = (owed[n]||0) + share; });
+    }
+  });
+  const names = [...new Set([...Object.keys(paid), ...Object.keys(owed)])];
+  const rows = names.map(n=>{ const p=paid[n]||0, o=owed[n]||0; return {name:n, paid:p, owed:o, bal:p-o}; })
+                    .sort((a,b)=>b.bal-a.bal);
+  return {total, settledTotal, rows, count:exps.length};
 }
 
 /* ---------- actions ---------- */
@@ -249,7 +281,7 @@ function newEvent(){
   const name=val("ev-name"), when=val("ev-when"), where=val("ev-where");
   if(!name){ toast("Give your event a name"); return; }
   const id = uid();
-  state.events.unshift({ id, name, when, where, attendees:[], items:[] });
+  state.events.unshift({ id, name, when, where, attendees:[], items:[], expenses:[] });
   go("event", id);
   toast("Event created 🎉");
 }
@@ -257,9 +289,8 @@ function addItem(kind){
   const ev=currentEvent(); if(!ev) return;
   const title=val("it-title"), note=val("it-note");
   if(!title){ toast("What's the item?"); return; }
-  const c = parseFloat(val("it-cost"));
-  ev.items.push({ id:uid(), title, note, broughtBy: kind==="bring" ? state.me : null, cost: isNaN(c)?null:c });
-  ["it-title","it-note","it-cost"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+  ev.items.push({ id:uid(), title, note, broughtBy: kind==="bring" ? state.me : null });
+  ["it-title","it-note"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
   save(); render();
   toast(kind==="bring" ? "Added — thanks for bringing it!" : "Added to the needed list");
 }
@@ -276,7 +307,6 @@ function setAddMode(mode){
   document.getElementById("seg-pack").classList.toggle("active", !group);
   document.getElementById("grp-btns").style.display = group ? "" : "none";
   document.getElementById("pack-btns").style.display = group ? "none" : "";
-  document.getElementById("cost-wrap").style.display = group ? "" : "none";
   document.getElementById("add-hint").textContent = group
     ? "Something the group needs, or that you'll bring for everyone."
     : "Your own gear to pack. Everyone can see it, but only you can change it.";
@@ -285,8 +315,8 @@ function addPersonal(){
   const ev=currentEvent(); if(!ev) return;
   const title=val("it-title"), note=val("it-note");
   if(!title){ toast("What are you packing?"); return; }
-  ev.items.push({ id:uid(), title, note, personal:true, owner:state.me, broughtBy:null, cost:null });
-  ["it-title","it-note","it-cost"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+  ev.items.push({ id:uid(), title, note, personal:true, owner:state.me, broughtBy:null });
+  ["it-title","it-note"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
   save(); render();
   toast("Added to your packing list 🎒");
 }
@@ -301,6 +331,30 @@ function cancelClaim(itemId){
 function removeItem(itemId){
   const ev=currentEvent(); if(!ev) return;
   ev.items = ev.items.filter(i=>i.id!==itemId); save(); render();
+}
+
+/* ---- expenses ---- */
+function addExpense(){
+  const ev=currentEvent(); if(!ev) return;
+  const title=val("ex-title");
+  if(!title){ toast("What was the expense?"); return; }
+  const amount=parseFloat(val("ex-amount"));
+  if(isNaN(amount) || amount<=0){ toast("Enter an amount"); return; }
+  const sel=document.getElementById("ex-paidby");
+  const paidBy = sel && sel.value ? sel.value : state.me;
+  const splitBetween=[...document.querySelectorAll("#ex-split input[type=checkbox]")]
+    .filter(c=>c.checked).map(c=>c.dataset.name);
+  if(!splitBetween.length){ toast("Pick at least one person to split with"); return; }
+  const st=document.getElementById("ex-settled");
+  expensesOf(ev).push({ id:uid(), title, amount, paidBy, splitBetween, settled: !!(st && st.checked) });
+  save(); render();
+  toast(st && st.checked ? "Logged as already settled" : "Expense added");
+}
+function removeExpense(expId){
+  const ev=currentEvent(); if(!ev) return;
+  const x=expensesOf(ev).find(e=>e.id===expId); if(!x) return;
+  if(x.paidBy!==state.me){ toast("Only the person who paid can remove this"); return; }
+  ev.expenses = expensesOf(ev).filter(e=>e.id!==expId); save(); render();
 }
 function val(id){ const el=document.getElementById(id); return el ? el.value.trim() : ""; }
 function copyInvite(){
@@ -414,25 +468,10 @@ function renderEvent(){
       <div class="chips">${chips}</div>
     </div>`;
 
-  // Cost split
-  const cs = costSummary(ev);
-  const sumHtml = cs.total>0 ? `<div class="sumcard">
-      <div class="sumtop">
-        <div class="big">${money(cs.total)}</div>
-        <div class="per">spent so far${cs.perHead!=null?` · ≈ ${money(cs.perHead)} each (${cs.totalHeads} ${cs.totalHeads===1?"person":"people"})`:""}</div>
-      </div>
-      ${cs.rows.map(r=>{
-        const cls = Math.abs(r.bal)<0.01?"even":(r.bal>0?"pos":"neg");
-        const lbl = Math.abs(r.bal)<0.01?"all square":(r.bal>0?`gets back ${money(r.bal)}`:`owes ${money(-r.bal)}`);
-        return `<div class="sumrow"><div class="nm">${esc(r.name)}${r.name===state.me?" (you)":""}<span class="paid">paid ${money(r.paid)}</span></div><div class="bal ${cls}">${lbl}</div></div>`;
-      }).join("")}
-      <div class="hint" style="margin-top:8px">Even split — the total is divided equally across everyone coming (plus guests), and each person's balance is what they paid minus their share.</div>
-    </div>` : "";
-
   const neededHtml = needed.length ? needed.map(it => `
     <div class="item need">
       <div class="body">
-        <div class="title">${esc(it.title)}${it.cost?`<span class="cost est">~${money(it.cost)}</span>`:""}</div>
+        <div class="title">${esc(it.title)}</div>
         ${it.note?`<div class="note">${esc(it.note)}</div>`:""}
       </div>
       <div class="actions">
@@ -444,7 +483,7 @@ function renderEvent(){
   const coveredHtml = covered.length ? covered.map(it => `
     <div class="item got">
       <div class="body">
-        <div class="title">${esc(it.title)}${it.cost?`<span class="cost">${money(it.cost)}</span>`:""}</div>
+        <div class="title">${esc(it.title)}</div>
         ${it.note?`<div class="note">${esc(it.note)}</div>`:""}
         <div class="by">✓ ${esc(it.broughtBy)}${it.broughtBy===state.me?" (you)":""}</div>
       </div>
@@ -452,6 +491,46 @@ function renderEvent(){
         ${it.broughtBy===state.me ? `<button class="btn sm ghost" onclick="cancelClaim('${it.id}')">Cancel</button>`:""}
       </div>
     </div>`).join("") : `<div class="empty">No one's claimed anything yet.</div>`;
+
+  const bringingHtml = `
+      <div class="toolbar">
+        <span class="pillstat need">${need} still needed</span>
+        <span class="pillstat got">${got} covered</span>
+      </div>
+
+      ${rsvpHtml}
+
+      <div class="section-title">Still needed</div>
+      ${neededHtml}
+
+      <div class="section-title">Being brought</div>
+      ${coveredHtml}
+
+      <div class="section-title">Packing lists</div>
+      ${packHtml}
+
+      <div class="card" style="margin-top:22px">
+        <div style="font-weight:700; margin-bottom:2px">➕ Add something</div>
+        <div class="seg">
+          <button id="seg-group" class="seg-btn active" onclick="setAddMode('group')">For the group</button>
+          <button id="seg-pack" class="seg-btn" onclick="setAddMode('packing')">My packing</button>
+        </div>
+        <div class="hint" id="add-hint">Something the group needs, or that you'll bring for everyone.</div>
+        <label class="fld" for="it-title">Item</label>
+        <input id="it-title" placeholder="e.g. Floor pump" onkeydown="if(event.key==='Enter')addItem('need')">
+        <label class="fld" for="it-note">Note (optional)</label>
+        <input id="it-note" placeholder="e.g. for everyone">
+        <div style="height:12px"></div>
+        <div class="row" id="grp-btns">
+          <button class="btn block" onclick="addItem('need')">Add as needed</button>
+          <button class="btn go block" onclick="addItem('bring')">I'm bringing this</button>
+        </div>
+        <div id="pack-btns" style="display:none">
+          <button class="btn primary block" onclick="addPersonal()">Add to my packing list</button>
+        </div>
+      </div>`;
+
+  const tab = state.tab === "costs" ? "costs" : "bringing";
 
   app().innerHTML = `
     <header>
@@ -467,47 +546,82 @@ function renderEvent(){
       </div>
     </header>
     <div class="wrap">
-      <div class="toolbar">
-        <span class="pillstat need">${need} still needed</span>
-        <span class="pillstat got">${got} covered</span>
+      <div class="tabs">
+        <button class="tab-btn ${tab==="bringing"?"active":""}" onclick="setTab('bringing')">Bringing</button>
+        <button class="tab-btn ${tab==="costs"?"active":""}" onclick="setTab('costs')">Costs</button>
       </div>
+      ${tab==="costs" ? renderCosts(ev) : bringingHtml}
+    </div>`;
+}
 
-      ${rsvpHtml}
+/* ---------- costs tab ---------- */
+function renderCosts(ev){
+  const exps = expensesOf(ev);
+  const su = settleUp(ev);
 
-      <div class="section-title">Still needed</div>
-      ${neededHtml}
+  const sumHtml = su.count ? `<div class="sumcard">
+      <div class="sumtop">
+        <div class="big">${money(su.total)}</div>
+        <div class="per">spent so far${su.settledTotal>0?` · ${money(su.settledTotal)} already settled`:""}</div>
+      </div>
+      ${su.rows.length ? su.rows.map(r=>{
+        const cls = Math.abs(r.bal)<0.01?"even":(r.bal>0?"pos":"neg");
+        const lbl = Math.abs(r.bal)<0.01?"all square":(r.bal>0?`gets back ${money(r.bal)}`:`owes ${money(-r.bal)}`);
+        return `<div class="sumrow"><div class="nm">${esc(r.name)}${r.name===state.me?" (you)":""}<span class="paid">paid ${money(r.paid)}</span></div><div class="bal ${cls}">${lbl}</div></div>`;
+      }).join("") : `<div class="hint" style="margin-top:8px">Everything's been settled — no balances outstanding.</div>`}
+      <div class="hint" style="margin-top:8px">Each unsettled expense is split equally between the people it's shared with. Settled ones still show below, but they're left out of these balances.</div>
+    </div>` : "";
 
-      <div class="section-title">Being brought</div>
-      ${coveredHtml}
-
-      ${sumHtml}
-
-      <div class="section-title">Packing lists</div>
-      ${packHtml}
-
-      <div class="card" style="margin-top:22px">
-        <div style="font-weight:700; margin-bottom:2px">➕ Add something</div>
-        <div class="seg">
-          <button id="seg-group" class="seg-btn active" onclick="setAddMode('group')">For the group</button>
-          <button id="seg-pack" class="seg-btn" onclick="setAddMode('packing')">My packing</button>
-        </div>
-        <div class="hint" id="add-hint">Something the group needs, or that you'll bring for everyone.</div>
-        <label class="fld" for="it-title">Item</label>
-        <input id="it-title" placeholder="e.g. Floor pump" onkeydown="if(event.key==='Enter')addItem('need')">
-        <div class="row">
-          <div><label class="fld" for="it-note">Note (optional)</label><input id="it-note" placeholder="e.g. for everyone"></div>
-          <div id="cost-wrap"><label class="fld" for="it-cost">Cost (optional)</label><input id="it-cost" type="number" inputmode="decimal" placeholder="$"></div>
-        </div>
-        <div style="height:12px"></div>
-        <div class="row" id="grp-btns">
-          <button class="btn block" onclick="addItem('need')">Add as needed</button>
-          <button class="btn go block" onclick="addItem('bring')">I'm bringing this</button>
-        </div>
-        <div id="pack-btns" style="display:none">
-          <button class="btn primary block" onclick="addPersonal()">Add to my packing list</button>
-        </div>
+  const listHtml = exps.length ? exps.map(x=>{
+    const split = (x.splitBetween||[]);
+    const detail = x.settled
+      ? `<span class="badge">Settled</span>`
+      : `Split between ${split.length ? split.map(n=>esc(n)+(n===state.me?" (you)":"")).join(", ") : "—"}`;
+    return `<div class="item exp${x.settled?" settled":""}">
+      <div class="body">
+        <div class="title">${esc(x.title)}</div>
+        <div class="note">Paid by ${esc(x.paidBy)}${x.paidBy===state.me?" (you)":""}</div>
+        <div class="note" style="margin-top:4px">${detail}</div>
+      </div>
+      <div class="actions">
+        <div class="amt">${money(x.amount)}</div>
+        ${x.paidBy===state.me ? `<button class="btn ghost sm" onclick="removeExpense('${x.id}')" title="Remove">✕</button>`:""}
       </div>
     </div>`;
+  }).join("") : `<div class="empty">No expenses yet — add the first one below.</div>`;
+
+  const attNames = [...new Set(attendeesOf(ev).map(a=>a.name))];
+  const payers = [...new Set([state.me, ...attNames])];
+  const paidByHtml = payers.map(n=>
+    `<option value="${esc(n)}"${n===state.me?" selected":""}>${esc(n)}${n===state.me?" (you)":""}</option>`).join("");
+  const splitHtml = attNames.length
+    ? attNames.map(n=>`<label class="cbx"><input type="checkbox" data-name="${esc(n)}" checked>${esc(n)}${n===state.me?" (you)":""}</label>`).join("")
+    : `<div class="hint">No one's RSVP'd yet — tap "I'm coming" on the Bringing tab first.</div>`;
+
+  return `
+      ${sumHtml}
+
+      <div class="section-title">Expenses</div>
+      ${listHtml}
+
+      <div class="card" style="margin-top:22px">
+        <div style="font-weight:700; margin-bottom:2px">➕ Add expense</div>
+        <div class="hint">Something you paid for that the group shares.</div>
+        <label class="fld" for="ex-title">Description</label>
+        <input id="ex-title" placeholder="e.g. Drinks run" onkeydown="if(event.key==='Enter')addExpense()">
+        <div class="row">
+          <div><label class="fld" for="ex-amount">Amount</label>
+            <input id="ex-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="$"></div>
+          <div><label class="fld" for="ex-paidby">Paid by</label>
+            <select id="ex-paidby">${paidByHtml}</select></div>
+        </div>
+        <label class="fld">Split between</label>
+        <div class="split-grid" id="ex-split">${splitHtml}</div>
+        <div style="height:12px"></div>
+        <label class="cbx"><input type="checkbox" id="ex-settled">Already paid / settled</label>
+        <div style="height:12px"></div>
+        <button class="btn primary block" onclick="addExpense()">Add expense</button>
+      </div>`;
 }
 
 function changeName(){ state.me = null; save(); render(); }
