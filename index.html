@@ -101,10 +101,18 @@
   .chip{display:inline-flex; align-items:center; gap:5px; background:var(--panel2); border:1px solid var(--line);
     border-radius:999px; padding:4px 10px; font-size:13px}
   .chip b{color:var(--text)} .chip .g{color:var(--muted); font-size:12px}
+  .rsvp-head{font-weight:700}
+  .rsvp-controls{display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; margin-top:12px}
   .stepper{display:inline-flex; align-items:center; gap:8px}
-  .stepper button{width:30px; height:30px; border-radius:8px; border:1px solid var(--line);
-    background:var(--panel2); color:var(--text); font-size:17px; cursor:pointer; line-height:1}
-  .stepper button:hover{filter:brightness(1.15)}
+  .stepper .lbl{color:var(--muted); font-size:12.5px}
+  /* sizing scoped to the −/+ keys only, so it can't squash the leave link */
+  .stepper .step{width:30px; height:30px; padding:0; border-radius:8px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); font-size:17px; cursor:pointer; line-height:1; flex:none}
+  .stepper .step:hover{filter:brightness(1.15)}
+  .stepper .count{min-width:14px; text-align:center}
+  .leave{background:none; border:none; padding:0; font-family:inherit; font-size:13px; font-weight:600;
+    color:var(--muted); cursor:pointer; white-space:nowrap; text-decoration:underline; text-underline-offset:3px}
+  .leave:hover{color:var(--danger)}
   .sumcard{background:#101a2b; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin:14px 0}
   .sumtop{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px}
   .sumtop .big{font-size:22px; font-weight:800}
@@ -458,13 +466,19 @@ function renderEvent(){
     ? att.map(a=>`<span class="chip"><b>${esc(a.name)}</b>${a.name===state.me?" ✓":""}${a.guests?`<span class="g">+${a.guests}</span>`:""}</span>`).join("")
     : `<span class="hint">No RSVPs yet — tap "I'm coming".</span>`;
   const rsvpControl = mine
-    ? `<div class="stepper"><span class="hint">You're in · guests</span><button onclick="setGuests(-1)">−</button><b>${mine.guests||0}</b><button onclick="setGuests(1)">+</button><button class="btn sm ghost" onclick="rsvpOut()">Can't make it</button></div>`
-    : `<button class="btn go sm" onclick="rsvpIn()">I'm coming</button>`;
+    ? `<div class="rsvp-controls">
+        <div class="stepper">
+          <span class="lbl">You're in · guests</span>
+          <button class="step" onclick="setGuests(-1)" aria-label="One fewer guest">−</button>
+          <b class="count">${mine.guests||0}</b>
+          <button class="step" onclick="setGuests(1)" aria-label="One more guest">+</button>
+        </div>
+        <button class="leave" onclick="rsvpOut()">Can't make it</button>
+      </div>`
+    : `<div class="rsvp-controls"><button class="btn go sm" onclick="rsvpIn()">I'm coming</button></div>`;
   const rsvpHtml = `<div class="card rsvp">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
-        <div style="font-weight:700">Who's coming <span class="hint">(${totalHeads} incl. guests)</span></div>
-        ${rsvpControl}
-      </div>
+      <div class="rsvp-head">Who's coming <span class="hint">(${totalHeads} incl. guests)</span></div>
+      ${rsvpControl}
       <div class="chips">${chips}</div>
     </div>`;
 
