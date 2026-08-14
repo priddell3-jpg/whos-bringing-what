@@ -463,7 +463,7 @@ function renderEvent(){
       <div class="share">
         🔗 ${CLOUD ? "Share link" : "Invite code"} ${CLOUD ? "" : `<span class="code">${esc(ev.id)}</span>`}
         <button class="btn sm ghost" onclick="copyInvite()">Copy ${CLOUD ? "link" : "invite"}</button>
-        <span>${CLOUD ? "· anyone who opens it shares this live list" : "· becomes a real shareable link in the synced version"}</span>
+        <span>${CLOUD ? "· anyone who opens it shares this live list" : "· this list stays on this device — others can't open it"}</span>
       </div>
     </header>
     <div class="wrap">
