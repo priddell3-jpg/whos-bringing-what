@@ -590,13 +590,12 @@ function renderCosts(ev){
     </div>`;
   }).join("") : `<div class="empty">No expenses yet — add the first one below.</div>`;
 
-  const attNames = [...new Set(attendeesOf(ev).map(a=>a.name))];
-  const payers = [...new Set([state.me, ...attNames])];
-  const paidByHtml = payers.map(n=>
+  // you're always in the list, whether or not you've RSVP'd
+  const people = [...new Set([state.me, ...attendeesOf(ev).map(a=>a.name)])];
+  const paidByHtml = people.map(n=>
     `<option value="${esc(n)}"${n===state.me?" selected":""}>${esc(n)}${n===state.me?" (you)":""}</option>`).join("");
-  const splitHtml = attNames.length
-    ? attNames.map(n=>`<label class="cbx"><input type="checkbox" data-name="${esc(n)}" checked>${esc(n)}${n===state.me?" (you)":""}</label>`).join("")
-    : `<div class="hint">No one's RSVP'd yet — tap "I'm coming" on the Bringing tab first.</div>`;
+  const splitHtml = people.map(n=>
+    `<label class="cbx"><input type="checkbox" data-name="${esc(n)}" checked>${esc(n)}${n===state.me?" (you)":""}</label>`).join("");
 
   return `
       ${sumHtml}
