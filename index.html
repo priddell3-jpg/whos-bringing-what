@@ -2,168 +2,385 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0f141f">
+<meta name="theme-color" content="#F5F6F2">
 <title>Who's Bringing What</title>
 <style>
+  /* ============================================================
+     Design tokens — warm light theme
+     ============================================================ */
   :root{
-    --bg:#0f141f; --panel:#17203180; --panel-s:#172031; --panel2:#1f2c44; --line:#2a3a58;
-    --text:#eef2f9; --muted:#9db0d0; --accent:#5b8cff; --accent-d:#3f6fe0;
-    --go:#22c55e; --go-d:#16a34a; --need:#f5a524; --danger:#ff6b6b;
+    --bg:#F5F6F2;
+    --card:#FFFFFF;
+    --text:#172033;
+    --muted:#687386;          /* on white cards */
+    --muted-strong:#5B6577;   /* on the page background, keeps contrast */
+    --line:#E1E5E9;
+    --line-soft:#EDEFF2;
+
+    --primary:#5271E8;        /* accents, focus ring, borders */
+    --primary-strong:#4661D8; /* filled buttons / stronger contrast */
+    --primary-text:#3B54C4;   /* primary-coloured text + links */
+
+    --green:#2F9E63;          /* accents */
+    --green-strong:#25814F;   /* filled buttons */
+    --green-text:#1E7A49;     /* text */
+    --green-soft:#E8F5EE;
+
+    --amber:#D49328;          /* accents */
+    --amber-edge:#C4871F;     /* 3:1 against white, for the still-needed edge */
+    --amber-text:#8A5B12;     /* text */
+    --amber-soft:#FBF1DF;
+
+    --danger:#C0392B;
+    --danger-soft:#FBECEA;
+
+    --shadow-sm:0 1px 2px rgba(23,32,51,.06);
+    --shadow:0 1px 2px rgba(23,32,51,.05), 0 6px 16px rgba(23,32,51,.06);
+    --r-lg:16px; --r:12px; --r-sm:10px; --r-pill:999px;
+    --tap:44px;
   }
+
   *{box-sizing:border-box}
   html,body{margin:0}
+  html{-webkit-text-size-adjust:100%}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--text); line-height:1.5; -webkit-font-smoothing:antialiased;
+    background:var(--bg); color:var(--text); font-size:16px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:640px; margin:0 auto; padding:0 16px 80px}
-  button{font-family:inherit}
+  h1,h2,h3,p,ul,ol,figure{margin:0}
+  ul,ol{list-style:none; padding:0}
+  button,input,select,textarea{font-family:inherit; font-size:16px; color:inherit}
 
-  .banner{background:#1a2740; border-bottom:1px solid var(--line); color:var(--muted);
-    font-size:12.5px; text-align:center; padding:7px 16px}
-  .banner b{color:var(--text)}
+  .wrap{max-width:660px; margin:0 auto; padding:0 16px calc(64px + env(safe-area-inset-bottom))}
+  header{max-width:660px; margin:0 auto; padding:18px 16px 4px}
 
-  header{padding:20px 16px 10px; max-width:640px; margin:0 auto}
-  .hrow{display:flex; align-items:center; justify-content:space-between; gap:10px}
-  h1{font-size:24px; margin:0; letter-spacing:.2px}
-  .sub{color:var(--muted); font-size:13.5px; margin:2px 0 0}
-  .who{font-size:13px; color:var(--muted); white-space:nowrap}
-  .who b{color:var(--text)}
-  .link{color:var(--accent); cursor:pointer; text-decoration:none}
-  .link:hover{text-decoration:underline}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0 0 0 0); white-space:nowrap; border:0}
 
-  .card{background:var(--panel-s); border:1px solid var(--line); border-radius:14px;
-    padding:14px 16px; margin:10px 0}
-  .event-card{cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:space-between; gap:12px}
-  .event-card:hover{background:var(--panel2); transform:translateY(-1px)}
-  .event-card h3{margin:0 0 3px; font-size:18px}
-  .event-card .meta{color:var(--muted); font-size:13px}
-  .chev{color:var(--muted); font-size:22px}
-
-  .pillstat{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
-    padding:3px 9px; border-radius:999px; border:1px solid var(--line)}
-  .pillstat.need{color:#ffcf87; background:rgba(245,165,36,.12)}
-  .pillstat.got{color:#8ff0b0; background:rgba(34,197,94,.12)}
-
-  .btn{cursor:pointer; border:1px solid var(--line); background:var(--panel2); color:var(--text);
-    border-radius:10px; padding:10px 14px; font-size:14.5px; font-weight:600; transition:.15s}
-  .btn:hover{filter:brightness(1.12)}
-  .btn.block{display:block; width:100%; text-align:center}
-  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
-  .btn.go{background:var(--go); border-color:var(--go); color:#04240f}
-  .btn.ghost{background:transparent}
-  .btn.sm{padding:7px 11px; font-size:13px; border-radius:9px}
-  .btn.danger{color:var(--danger); border-color:#5b2b34; background:#2a1720}
-
-  input, textarea{
-    width:100%; background:#0c1320; border:1px solid var(--line); color:var(--text);
-    border-radius:10px; padding:11px 12px; font-size:15px; font-family:inherit; margin:0;
+  /* focus — visible on every interactive control */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+  textarea:focus-visible, [tabindex]:focus-visible{
+    outline:3px solid rgba(82,113,232,.5); outline-offset:2px; border-radius:var(--r-sm);
   }
-  input:focus, textarea:focus{outline:none; border-color:var(--accent)}
-  label.fld{display:block; font-size:12.5px; color:var(--muted); margin:12px 0 5px; font-weight:600}
 
-  .section-title{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted);
-    margin:22px 0 6px; font-weight:700}
-  .item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--panel-s);
-    border:1px solid var(--line); border-radius:12px; margin:8px 0}
-  .item.got{border-left:3px solid var(--go)}
-  .item.need{border-left:3px solid var(--need)}
-  .item .body{flex:1; min-width:0}
-  .item .title{font-weight:650; font-size:15.5px}
-  .item .note{color:var(--muted); font-size:13px; margin-top:2px; word-wrap:break-word}
-  .item .by{font-size:13px; margin-top:3px; color:#8ff0b0; font-weight:600}
-  .item .actions{display:flex; flex-direction:column; gap:6px; align-items:flex-end}
+  /* ============================================================
+     Typography helpers
+     ============================================================ */
+  h1{font-size:24px; line-height:1.25; letter-spacing:-.2px; font-weight:700}
+  .ev-title{font-size:24px; line-height:1.2; overflow-wrap:anywhere}
+  .meta{color:var(--muted-strong); font-size:15px}
+  .sub{color:var(--muted-strong); font-size:15px}
+  .hint{color:var(--muted); font-size:14px}
+  .section{margin:26px 0 0}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 2px 10px}
+  .section-head h2{font-size:17px; font-weight:700; letter-spacing:-.1px}
+  .section-head .count{color:var(--muted-strong); font-size:14px; font-weight:600; white-space:nowrap}
 
-  .empty{color:var(--muted); font-size:14px; text-align:center; padding:18px; border:1px dashed var(--line);
-    border-radius:12px; margin:8px 0}
-  .row{display:flex; gap:8px}
-  .row > *{flex:1}
-  .toolbar{display:flex; gap:8px; margin-top:8px}
-  .back{cursor:pointer; color:var(--muted); font-size:14px; display:inline-flex; align-items:center; gap:6px; margin:4px 0 2px}
-  .back:hover{color:var(--text)}
-  .share{display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:#101a2b; border:1px dashed var(--line);
-    border-radius:12px; padding:10px 12px; font-size:13px; color:var(--muted); margin-top:10px}
-  .code{font-family:ui-monospace,Menlo,monospace; color:var(--text); background:#0c1320; border:1px solid var(--line);
-    padding:2px 8px; border-radius:7px}
-  .hint{color:var(--muted); font-size:12.5px; margin-top:6px}
-  .center{max-width:400px; margin:8vh auto 0; text-align:center; padding:0 16px}
-  .center h1{font-size:26px; margin-bottom:6px}
-  .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--panel2);
-    border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:10px; font-size:14px;
-    box-shadow:0 8px 24px #0008; opacity:0; pointer-events:none; transition:.2s}
-  .toast.show{opacity:1}
+  /* ============================================================
+     Cards & surfaces
+     ============================================================ */
+  .card{background:var(--card); border:1px solid var(--line-soft); border-radius:var(--r-lg);
+    padding:16px; box-shadow:var(--shadow-sm)}
+  .card + .card{margin-top:12px}
+  .card-title{font-size:17px; font-weight:700; margin-bottom:2px}
+  .panel{background:var(--card); border:1px solid var(--line-soft); border-radius:var(--r-lg);
+    box-shadow:var(--shadow-sm); overflow:hidden}
+  .empty{color:var(--muted-strong); font-size:15px; padding:16px; background:var(--card);
+    border:1px dashed var(--line); border-radius:var(--r); text-align:center}
 
-  /* RSVP + cost additions */
-  .rsvp{margin-top:10px}
-  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
-  .chip{display:inline-flex; align-items:center; gap:5px; background:var(--panel2); border:1px solid var(--line);
-    border-radius:999px; padding:4px 10px; font-size:13px}
-  .chip b{color:var(--text)} .chip .g{color:var(--muted); font-size:12px}
-  .rsvp-head{font-weight:700}
-  .rsvp-controls{display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; margin-top:12px}
-  .stepper{display:inline-flex; align-items:center; gap:8px}
-  .stepper .lbl{color:var(--muted); font-size:12.5px}
-  /* sizing scoped to the −/+ keys only, so it can't squash the leave link */
-  .stepper .step{width:30px; height:30px; padding:0; border-radius:8px; border:1px solid var(--line);
-    background:var(--panel2); color:var(--text); font-size:17px; cursor:pointer; line-height:1; flex:none}
-  .stepper .step:hover{filter:brightness(1.15)}
-  .stepper .count{min-width:14px; text-align:center}
-  .leave{background:none; border:none; padding:0; font-family:inherit; font-size:13px; font-weight:600;
-    color:var(--muted); cursor:pointer; white-space:nowrap; text-decoration:underline; text-underline-offset:3px}
-  .leave:hover{color:var(--danger)}
-  .sumcard{background:#101a2b; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin:14px 0}
-  .sumtop{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px}
-  .sumtop .big{font-size:22px; font-weight:800}
-  .sumtop .per{color:var(--muted); font-size:13.5px}
-  .sumrow{display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid var(--line); font-size:14px}
-  .sumrow .nm{font-weight:600}
-  .sumrow .paid{color:var(--muted); font-size:12.5px; margin-left:6px; font-weight:400}
-  .bal.pos{color:#8ff0b0; font-weight:700} .bal.neg{color:#ffcf87; font-weight:700} .bal.even{color:var(--muted)}
+  /* ============================================================
+     Buttons
+     ============================================================ */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    min-height:var(--tap); padding:10px 16px; border-radius:var(--r-sm);
+    border:1px solid var(--line); background:var(--card); color:var(--text);
+    font-size:16px; font-weight:600; line-height:1.2; cursor:pointer;
+    box-shadow:var(--shadow-sm); transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .btn:hover{background:#F7F8FA}
+  .btn:active{background:#EFF1F5}
+  .btn.block{display:flex; width:100%}
+  .btn.primary{background:var(--primary-strong); border-color:var(--primary-strong); color:#fff}
+  .btn.primary:hover{background:#3B54C4; border-color:#3B54C4}
+  .btn.go{background:var(--green-strong); border-color:var(--green-strong); color:#fff}
+  .btn.go:hover{background:#1E7A49; border-color:#1E7A49}
+  .btn.quiet{background:transparent; border-color:transparent; box-shadow:none; color:var(--muted-strong)}
+  .btn.quiet:hover{background:rgba(23,32,51,.05); color:var(--text)}
+  .btn.sm{min-height:42px; padding:8px 14px; font-size:15px}
+  .btn.danger{color:var(--danger); border-color:#F0D4D0; background:var(--danger-soft); box-shadow:none}
+  .btn.danger:hover{background:#F6DDD9}
+  .btn[disabled]{opacity:.55; cursor:default}
 
-  /* event tabs */
-  .tabs{display:flex; gap:4px; background:#0c1320; border:1px solid var(--line); border-radius:12px;
-    padding:4px; margin:12px 0 2px}
-  .tab-btn{flex:1; border:none; background:transparent; color:var(--muted); font-weight:700; font-size:14.5px;
-    padding:9px 12px; border-radius:9px; cursor:pointer}
-  .tab-btn.active{background:var(--panel2); color:var(--text)}
-  .tab-btn:hover:not(.active){color:var(--text)}
+  .iconbtn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:var(--tap); height:var(--tap); flex:none; padding:0;
+    border:1px solid transparent; border-radius:var(--r-sm); background:transparent;
+    color:var(--muted-strong); font-size:19px; line-height:1; cursor:pointer;
+  }
+  .iconbtn:hover{background:rgba(23,32,51,.05); color:var(--danger)}
 
-  /* expenses */
-  .exp{border-left:3px solid var(--accent)}
-  .exp.settled{border-left-color:var(--go); opacity:.72}
-  .exp .amt{font-weight:800; font-size:15.5px; white-space:nowrap}
-  .badge{display:inline-block; font-size:11.5px; font-weight:700; color:#8ff0b0;
-    background:rgba(34,197,94,.12); border:1px solid var(--line); border-radius:999px; padding:1px 8px}
-  select{width:100%; background:#0c1320; border:1px solid var(--line); color:var(--text);
-    border-radius:10px; padding:11px 12px; font-size:15px; font-family:inherit}
-  select:focus{outline:none; border-color:var(--accent)}
-  .cbx{display:inline-flex; align-items:center; gap:7px; background:#0c1320; border:1px solid var(--line);
-    border-radius:999px; padding:6px 12px; font-size:13.5px; cursor:pointer; user-select:none}
-  .cbx input{width:auto; margin:0; padding:0; accent-color:var(--accent)}
-  .split-grid{display:flex; flex-wrap:wrap; gap:7px; margin-top:5px}
+  .linkbtn{
+    display:inline-flex; align-items:center; min-height:36px; padding:0 2px; margin:0;
+    border:none; background:none; font-size:inherit; font-weight:600;
+    color:var(--primary-text); cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+  }
+  .linkbtn:hover{color:#2C42A8}
+  .linkbtn.mutedlink{min-height:var(--tap); padding:0 6px; color:var(--muted-strong); font-weight:600}
+  .linkbtn.mutedlink:hover{color:var(--danger)}
 
-  /* segmented toggle + packing lists */
-  .seg{display:inline-flex; background:#0c1320; border:1px solid var(--line); border-radius:10px; padding:3px; margin:6px 0 4px}
-  .seg-btn{border:none; background:transparent; color:var(--muted); font-weight:600; font-size:13.5px;
-    padding:7px 12px; border-radius:8px; cursor:pointer}
-  .seg-btn.active{background:var(--panel2); color:var(--text)}
-  .pack{background:var(--panel-s); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:8px 0}
-  .pack-owner{font-weight:700; font-size:14.5px; margin-bottom:8px}
-  .pack-owner .tag{font-size:11.5px; font-weight:600; color:var(--muted); background:var(--panel2);
-    border:1px solid var(--line); border-radius:999px; padding:2px 8px; margin-left:6px}
-  .pack-items{display:flex; flex-wrap:wrap; gap:6px}
-  .pchip{display:inline-flex; align-items:center; gap:6px; background:#0c1320; border:1px solid var(--line);
-    border-radius:999px; padding:5px 11px; font-size:13.5px}
-  .pchip .x{cursor:pointer; color:var(--muted); font-weight:700}
-  .pchip .x:hover{color:var(--danger)}
+  .back{display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:6px 10px 6px 6px;
+    margin:0 0 6px -6px; border:none; background:none; color:var(--muted-strong);
+    font-size:15px; font-weight:600; cursor:pointer; border-radius:var(--r-sm)}
+  .back:hover{background:rgba(23,32,51,.05); color:var(--text)}
+
+  /* ============================================================
+     Pills / chips / status
+     ============================================================ */
+  .pill{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:var(--r-pill);
+    font-size:13.5px; font-weight:600; white-space:nowrap; border:1px solid transparent}
+  .pill.need{color:var(--amber-text); background:var(--amber-soft); border-color:#F0DEBE}
+  .pill.got{color:var(--green-text); background:var(--green-soft); border-color:#CFE7DA}
+  .pill.plain{color:var(--muted-strong); background:#F1F3F6; border-color:var(--line)}
+
+  .status{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:var(--r-pill);
+    font-size:13px; font-weight:600; border:1px solid var(--line); background:var(--card); color:var(--muted-strong)}
+  .status .dot{width:8px; height:8px; border-radius:50%; background:var(--muted); flex:none}
+  .status.live{color:var(--green-text); border-color:#CFE7DA; background:var(--green-soft)}
+  .status.live .dot{background:var(--green)}
+  .status.local .dot{background:var(--amber)}
+  .status.err{color:var(--danger); border-color:#F0D4D0; background:var(--danger-soft)}
+  .status.err .dot{background:var(--danger)}
+
+  .chip{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:var(--r-pill);
+    background:#F1F3F6; border:1px solid var(--line); font-size:14.5px}
+  .chip .g{color:var(--muted); font-size:13px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+
+  .tag{display:inline-block; font-size:12px; font-weight:700; letter-spacing:.2px; text-transform:uppercase;
+    color:var(--muted-strong); background:#F1F3F6; border:1px solid var(--line);
+    border-radius:var(--r-pill); padding:2px 8px}
+
+  /* ============================================================
+     Forms
+     ============================================================ */
+  .field{margin-top:14px}
+  .field:first-child{margin-top:0}
+  label.fld{display:block; font-size:14px; font-weight:600; color:var(--muted-strong); margin:0 0 6px}
+  input[type=text], input[type=number], input[type=date], input[type=time], textarea, select{
+    width:100%; min-height:var(--tap); background:var(--card); color:var(--text);
+    border:1px solid var(--line); border-radius:var(--r-sm); padding:10px 12px; font-size:16px;
+  }
+  textarea{min-height:76px; resize:vertical}
+  select{appearance:none; -webkit-appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+    background-size:5px 5px, 5px 5px; background-repeat:no-repeat; padding-right:38px}
+  input:focus, select:focus, textarea:focus{border-color:var(--primary)}
+  input::placeholder, textarea::placeholder{color:#9AA3B2}
+  .row{display:flex; gap:12px; flex-wrap:wrap}
+  .row > *{flex:1 1 150px; min-width:0}
+  .actions-row{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+  .actions-row > .btn{flex:1 1 160px}
+  .err{color:var(--danger); font-size:14.5px; font-weight:600; margin-top:10px}
+  .cbx{display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:6px 14px 6px 12px;
+    background:var(--card); border:1px solid var(--line); border-radius:var(--r-pill);
+    font-size:15px; cursor:pointer; user-select:none}
+  .cbx input{width:20px; height:20px; min-height:0; margin:0; accent-color:var(--primary-strong); flex:none}
+  .cbx.on{border-color:var(--primary); background:#F2F5FE}
+  .cbx-list{display:flex; flex-wrap:wrap; gap:8px}
+  .cbx.stack{border-radius:var(--r-sm); width:100%; justify-content:flex-start}
+
+  /* segmented control */
+  .seg{display:inline-flex; background:#F1F3F6; border:1px solid var(--line); border-radius:var(--r-sm); padding:4px; gap:4px}
+  .seg-btn{flex:1; min-height:38px; padding:8px 14px; border:none; background:transparent; border-radius:8px;
+    color:var(--muted-strong); font-size:15px; font-weight:600; cursor:pointer; white-space:nowrap}
+  .seg-btn[aria-pressed="true"]{background:var(--card); color:var(--text); box-shadow:var(--shadow-sm)}
+
+  /* ============================================================
+     Home
+     ============================================================ */
+  .topbar{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+  .topbar h1{min-width:0; overflow-wrap:anywhere}
+  .idrow{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; flex-wrap:wrap}
+  .idrow .who{font-size:15px; color:var(--muted-strong)}
+  .idrow .who b{color:var(--text); font-weight:700}
+
+  .event-list{display:flex; flex-direction:column; gap:12px; margin-top:16px}
+  .event-card{display:flex; width:100%; text-align:left; align-items:center; gap:12px; cursor:pointer;
+    font:inherit; color:inherit; transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease}
+  .event-card:hover{box-shadow:var(--shadow); border-color:var(--line); transform:translateY(-1px)}
+  .event-card .ec-body{flex:1; min-width:0; display:block}
+  .event-card .ec-name{display:block; font-size:18px; font-weight:700; letter-spacing:-.1px; overflow-wrap:anywhere}
+  .event-card .ec-meta{display:block; color:var(--muted-strong); font-size:14.5px; margin-top:3px; overflow-wrap:anywhere}
+  .event-card .ec-pills{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+  .event-card .chev{color:var(--muted); font-size:22px; flex:none}
+
+  /* ============================================================
+     Event header + share row
+     ============================================================ */
+  .ev-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .ev-head .ev-titles{min-width:0; flex:1 1 220px}
+  .share-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:14px}
+  .share-row .spacer{flex:1}
+  .share-row .you{font-size:14.5px; color:var(--muted-strong); white-space:nowrap}
+  .share-row .you b{color:var(--text)}
+  .invite{display:inline-flex; align-items:center; gap:6px; font-size:14.5px; color:var(--muted-strong)}
+  .code{font-family:ui-monospace,Menlo,monospace; font-size:14px; background:#F1F3F6;
+    border:1px solid var(--line); border-radius:8px; padding:3px 8px}
+
+  /* ============================================================
+     Tabs
+     ============================================================ */
+  .tabs{display:flex; gap:4px; background:#EDEFF2; border-radius:var(--r); padding:4px; margin:16px 0 4px}
+  .tab-btn{flex:1; min-height:42px; padding:8px 10px; border:none; background:transparent; border-radius:9px;
+    color:var(--muted-strong); font-size:15.5px; font-weight:700; cursor:pointer; white-space:nowrap}
+  .tab-btn[aria-selected="true"]{background:var(--card); color:var(--text); box-shadow:var(--shadow-sm)}
+  .tab-btn:hover[aria-selected="false"]{color:var(--text)}
+  [role=tabpanel]:focus{outline:none}
+
+  /* ============================================================
+     Bringing — three visually distinct areas
+     ============================================================ */
+  .rsvp-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap}
+  .rsvp-controls{display:flex; align-items:center; justify-content:space-between; gap:12px;
+    flex-wrap:wrap; margin-top:14px}
+  .stepper{display:inline-flex; align-items:center; gap:6px}
+  .stepper .lbl{color:var(--muted-strong); font-size:14.5px; margin-right:4px}
+  .stepper .step{width:var(--tap); height:var(--tap); flex:none; padding:0; border:1px solid var(--line);
+    background:var(--card); color:var(--text); border-radius:var(--r-sm); font-size:20px; line-height:1; cursor:pointer}
+  .stepper .step:hover{background:#F1F3F6}
+  .stepper .count{min-width:22px; text-align:center; font-weight:700}
+
+  /* Still needed — white cards with an amber edge */
+  .need-list{display:flex; flex-direction:column; gap:10px}
+  .need-item{display:flex; align-items:flex-start; gap:10px; background:var(--card);
+    border:1px solid var(--line-soft); border-left:4px solid var(--amber-edge);
+    border-radius:var(--r); padding:12px 8px 12px 14px; box-shadow:var(--shadow-sm)}
+  .need-item .body{flex:1; min-width:0}
+  .need-item .t{font-size:16.5px; font-weight:650; overflow-wrap:anywhere}
+  .need-item .n{color:var(--muted); font-size:14.5px; margin-top:2px; overflow-wrap:anywhere}
+  .need-item .acts{display:flex; align-items:center; gap:4px; flex:none}
+
+  /* Being brought — one quiet grouped list, not a stack of boxes */
+  .flat{background:var(--card); border:1px solid var(--line-soft); border-radius:var(--r-lg);
+    box-shadow:var(--shadow-sm); overflow:hidden}
+  .flat li{display:flex; align-items:flex-start; gap:12px; padding:12px 10px 12px 16px; border-top:1px solid var(--line-soft)}
+  .flat li:first-child{border-top:none}
+  .flat .check{width:22px; height:22px; flex:none; margin-top:2px; border-radius:50%;
+    background:var(--green-soft); color:var(--green-text); font-size:13px; font-weight:800;
+    display:flex; align-items:center; justify-content:center}
+  .flat .body{flex:1; min-width:0}
+  .flat .t{font-size:16px; font-weight:600; overflow-wrap:anywhere}
+  .flat .who{color:var(--green-text); font-size:14.5px; font-weight:600; margin-top:2px}
+  .flat .n{color:var(--muted); font-size:14.5px; margin-top:2px; overflow-wrap:anywhere}
+
+  /* Packing — tinted rows, no heavy boxes */
+  .pack-list{display:flex; flex-direction:column; gap:10px}
+  .pack{background:rgba(82,113,232,.05); border:1px solid #DFE4F7; border-radius:var(--r); padding:12px 14px}
+  .pack-head{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:700; font-size:16px; margin-bottom:10px}
+  .pchip{display:inline-flex; align-items:center; gap:4px; min-height:var(--tap);
+    background:var(--card); border:1px solid var(--line);
+    border-radius:var(--r-pill); padding:2px 4px 2px 14px; font-size:15px}
+  .pchip.plain{padding:8px 14px}
+  .pchip .x{width:38px; height:38px; min-height:0; border-radius:50%; font-size:15px}
+
+  /* ============================================================
+     Travel
+     ============================================================ */
+  .tcard{background:var(--card); border:1px solid var(--line-soft); border-radius:var(--r-lg);
+    box-shadow:var(--shadow-sm); padding:14px 16px}
+  .tcard + .tcard{margin-top:12px}
+  .tcard.mine{border-color:#C9D3F7; box-shadow:0 0 0 1px rgba(82,113,232,.12), var(--shadow-sm)}
+  .tcard-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+  .tcard-name{font-size:17px; font-weight:700; overflow-wrap:anywhere}
+  .tleg{display:flex; gap:12px; padding:12px 0 0; border-top:1px solid var(--line-soft); margin-top:12px}
+  .tcard-head + .tleg{border-top:none; margin-top:10px; padding-top:0}
+  .tleg .lbl{flex:none; width:84px; color:var(--muted-strong); font-size:13.5px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.4px; padding-top:2px}
+  .tleg .val{flex:1; min-width:0}
+  .tleg .main{font-size:16px; font-weight:600; overflow-wrap:anywhere}
+  .tleg .det{color:var(--muted); font-size:14.5px; margin-top:2px; overflow-wrap:anywhere}
+  .tride{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line-soft)}
+  .tnone{color:var(--muted-strong); font-size:15px; margin-top:8px}
+  .tsub{color:var(--muted); font-size:14px; margin-top:6px}
+  .fieldset{border:none; margin:0; padding:0}
+  .fieldset + .fieldset{margin-top:20px; padding-top:18px; border-top:1px solid var(--line-soft)}
+  .fieldset legend{padding:0; font-size:15px; font-weight:700; letter-spacing:.2px}
+
+  /* ============================================================
+     Costs
+     ============================================================ */
+  .totals{display:flex; gap:12px; flex-wrap:wrap}
+  .tot{flex:1 1 150px; background:var(--card); border:1px solid var(--line-soft); border-radius:var(--r-lg);
+    box-shadow:var(--shadow-sm); padding:14px 16px}
+  .tot .k{color:var(--muted-strong); font-size:14px; font-weight:600}
+  .tot .v{font-size:24px; font-weight:800; letter-spacing:-.4px; margin-top:2px}
+  .tot .v.pos{color:var(--green-text)} .tot .v.neg{color:var(--amber-text)}
+  .balrow{display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 16px; border-top:1px solid var(--line-soft)}
+  .balrow:first-child{border-top:none}
+  .balrow .nm{font-weight:600; min-width:0; overflow-wrap:anywhere}
+  .balrow .paid{display:block; color:var(--muted); font-size:14px; font-weight:400}
+  .balrow .bal{font-weight:700; white-space:nowrap; font-size:15px}
+  .bal.pos{color:var(--green-text)} .bal.neg{color:var(--amber-text)} .bal.even{color:var(--muted-strong)}
+  .settle li{display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--line-soft); font-size:16px}
+  .settle li:first-child{border-top:none}
+  .settle .amt{margin-left:auto; font-weight:700; white-space:nowrap}
+  .exp-list{display:flex; flex-direction:column; gap:10px}
+  .exp{display:flex; align-items:flex-start; gap:10px; background:var(--card); border:1px solid var(--line-soft);
+    border-left:4px solid var(--primary); border-radius:var(--r); padding:12px 8px 12px 14px; box-shadow:var(--shadow-sm)}
+  .exp.settled{border-left-color:var(--green); background:#FCFDFC}
+  .exp .body{flex:1; min-width:0}
+  .exp .t{font-size:16.5px; font-weight:650; overflow-wrap:anywhere}
+  .exp .n{color:var(--muted); font-size:14.5px; margin-top:2px; overflow-wrap:anywhere}
+  .exp .side{display:flex; align-items:center; gap:2px; flex:none}
+  .exp .amt{font-size:16.5px; font-weight:800; white-space:nowrap}
+  .badge{display:inline-block; font-size:12.5px; font-weight:700; color:var(--green-text);
+    background:var(--green-soft); border:1px solid #CFE7DA; border-radius:var(--r-pill); padding:1px 9px}
+
+  /* ============================================================
+     Name gate + toast
+     ============================================================ */
+  .center{max-width:420px; margin:12vh auto 0; padding:0 20px}
+  .center h1{font-size:26px; margin-bottom:8px}
+  .center .sub{margin-bottom:20px}
+
+  .toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    display:flex; align-items:center; gap:12px; max-width:calc(100% - 32px);
+    background:#172033; color:#fff; padding:12px 14px; border-radius:var(--r); font-size:15px;
+    box-shadow:0 10px 30px rgba(23,32,51,.25); opacity:0; visibility:hidden; transition:opacity .18s ease; z-index:50}
+  .toast.show{opacity:1; visibility:visible}
+  .toast button{min-height:36px; padding:6px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.35);
+    background:transparent; color:#fff; font-weight:700; font-size:15px; cursor:pointer; flex:none}
+  .toast button:hover{background:rgba(255,255,255,.14)}
+  .toast button:focus-visible{outline:3px solid rgba(255,255,255,.6); outline-offset:2px}
+
+  @media (max-width:420px){
+    header{padding-top:14px}
+    h1{font-size:22px}
+    .ev-title{font-size:21px}
+    .tab-btn{font-size:15px; padding:8px 6px}
+    .tleg .lbl{width:74px; font-size:12.5px}
+    .actions-row > .btn{flex:1 1 100%}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none !important; animation:none !important; scroll-behavior:auto !important}
+    .event-card:hover{transform:none}
+  }
 </style>
 </head>
 <body>
-<div class="banner">🎈 <b>Demo preview</b> — saves on this device only. Syncing across everyone's phones is the next step.</div>
 <div id="app"></div>
-<div class="toast" id="toast"></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toast-msg"></span>
+  <button type="button" id="toast-action" hidden></button>
+</div>
 
 <!-- Supabase client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -171,13 +388,11 @@
 <script src="config.js"></script>
 <script>
 /* ============================================================
-   Who's Bringing What — no-backend demo
-   State lives in the browser (localStorage if available, else memory).
+   Who's Bringing What
+   Single-file app. Shared state lives in Supabase when config.js
+   has keys; otherwise everything is kept on this device (demo mode).
    ============================================================ */
-/* ============================================================
-   CONFIG — paste your two Supabase keys here to go LIVE & SHARED.
-   Leave them blank and it runs as the on-your-device demo.
-   ============================================================ */
+
 const CFG = (typeof window !== "undefined" && window.WBW_CONFIG) ? window.WBW_CONFIG : {};
 const CONFIG = {
   SUPABASE_URL: CFG.SUPABASE_URL || "",       // set these in config.js
@@ -189,17 +404,21 @@ const sb = CLOUD ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPA
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
-/* device-local: just your name + where you are in the app */
+/* ---------- device-local: your name + where you are in the app ---------- */
 const LKEY = "wbw_local_v1";
-function saveLocal(){ try{ localStorage.setItem(LKEY, JSON.stringify({me:state.me, view:state.view, currentId:state.currentId})); }catch(e){} }
+function saveLocal(){
+  try{ localStorage.setItem(LKEY, JSON.stringify({me:state.me, view:state.view, currentId:state.currentId, tab:state.tab})); }catch(e){}
+}
 function loadLocal(){ try{ return JSON.parse(localStorage.getItem(LKEY)) || {}; }catch(e){ return {}; } }
 
-/* demo-mode events (used only when there are no Supabase keys) */
+/* ---------- demo-mode events (used only when there are no Supabase keys) ---------- */
 const EKEY = "wbw_events_v1";
 function saveDemoEvents(){ try{ localStorage.setItem(EKEY, JSON.stringify(state.events)); }catch(e){} }
 function loadDemoEvents(){ try{ const s=localStorage.getItem(EKEY); return s?JSON.parse(s):seedEvents(); }catch(e){ return seedEvents(); } }
 
 function seedEvents(){
+  /* Deliberately uses the old free-text "when" field so demo mode also
+     exercises the backwards-compatible path for pre-date events. */
   return [
     { id:"bbq123", name:"Sarah's Backyard BBQ", when:"Sat Aug 23, 6pm", where:"Sarah's place",
       attendees:[{name:"Marcus",guests:0},{name:"Priya",guests:1}],
@@ -213,447 +432,1304 @@ function seedEvents(){
       expenses:[
         {id:uid(), title:"Burgers & buns", amount:42, paidBy:"Marcus", splitBetween:["Marcus","Priya"], settled:false},
       ] },
+    /* A newer-style event: proper dates plus travel plans. */
+    { id:"cabin99", name:"Cabin Weekend", startDate:"2026-10-02", endDate:"2026-10-04",
+      when:"Fri 2 – Sun 4 Oct 2026", where:"Squamish",
+      attendees:[{name:"Nel",guests:1},{name:"Sam",guests:0}],
+      items:[
+        {id:uid(), title:"Firewood", note:"two bundles", broughtBy:"Nel"},
+        {id:uid(), title:"Breakfast stuff", note:"eggs, bread, coffee", broughtBy:null},
+        {id:uid(), title:"Board games", note:"", broughtBy:null},
+        {id:uid(), title:"Head torch", note:"", personal:true, owner:"Nel", broughtBy:null},
+      ],
+      expenses:[
+        {id:uid(), title:"Cabin booking", amount:300, paidBy:"Nel", splitBetween:["Nel","Sam"], settled:false},
+      ],
+      travel:{
+        "Nel":{ arrive:{date:"2026-10-02", time:"16:00", method:"Driving", place:"Vancouver", details:"Room for two more"},
+                depart:{date:"2026-10-04", time:"11:00", method:"Driving", place:"Vancouver", details:""},
+                ride:{offer:true, need:false, note:"Two spare seats, leaving Friday lunchtime"} },
+        "Sam":{ arrive:{date:"2026-10-02", time:"18:30", method:"Train/Bus", place:"Seattle", details:"Bus gets in at the village stop"},
+                depart:{date:"2026-10-04", time:"", method:"", place:"", details:""},
+                ride:{offer:false, need:true, note:"Could use a lift back to the bus"} },
+      } },
   ];
 }
 
-let state = { me:null, view:"home", currentId:null, tab:"bringing", events:[] };
+/* ---------- state ---------- */
+let state = {
+  me:null, view:"home", currentId:null, tab:"bringing", events:[],
+  conn: CLOUD ? "connecting" : "local",
+  ui:{
+    newEventOpen:false, addOpen:false, addMode:"group", expOpen:false,
+    travelEditing:false, nameClash:null, error:null,
+  },
+};
 
-/* ---- persistence: cloud (shared) or local (demo) ---- */
+/* ============================================================
+   Persistence
+   ============================================================ */
 function save(){
   saveLocal();
-  if(CLOUD){ const ev = currentEvent(); if(ev) cloudUpsert(ev); }
-  else { saveDemoEvents(); }
+  if(!CLOUD) saveDemoEvents();
 }
+
 async function cloudUpsert(ev){
   try{
     const { error } = await sb.from("events").upsert({ id:ev.id, data:ev, updated_at:new Date().toISOString() });
-    if(error) console.error("save error:", error.message);
-  }catch(e){ console.error(e); }
+    if(error){ console.error("save error:", error.message); setConn("err"); announce("Couldn't save — check your connection"); return false; }
+    setConn("live");
+    return true;
+  }catch(e){ console.error(e); setConn("err"); announce("Couldn't save — check your connection"); return false; }
 }
+
+async function cloudFetchOne(id){
+  try{
+    const { data, error } = await sb.from("events").select("data").eq("id", id).maybeSingle();
+    if(error || !data) return null;
+    return data.data || null;
+  }catch(e){ return null; }
+}
+
 async function cloudLoad(){
   try{
     const { data, error } = await sb.from("events").select("*").order("updated_at",{ascending:false});
-    if(error){ console.error("load error:", error.message); return; }
-    state.events = data.map(r => r.data);
+    if(error){ console.error("load error:", error.message); setConn("err"); return; }
+    state.events = (data||[]).map(r => r.data).filter(Boolean);
+    setConn("live");
     render();
-  }catch(e){ console.error(e); }
-}
-function subscribeRT(){
-  try{ sb.channel("events-rt")
-        .on("postgres_changes",{event:"*",schema:"public",table:"events"}, () => cloudLoad())
-        .subscribe(); }catch(e){}
+  }catch(e){ console.error(e); setConn("err"); render(); }
 }
 
-/* ---------- helpers ---------- */
-const esc = s => (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function subscribeRT(){
+  try{
+    sb.channel("events-rt")
+      .on("postgres_changes",{event:"*",schema:"public",table:"events"}, () => cloudLoad())
+      .subscribe(status => {
+        if(status === "SUBSCRIBED") setConn("live");
+        else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT") setConn("err");
+      });
+  }catch(e){ setConn("err"); }
+}
+
+function setConn(next){
+  if(state.conn === next) return;
+  state.conn = next;
+  const el = document.getElementById("conn-status");
+  if(el) el.replaceWith(statusEl());
+}
+
+/* Apply a change to the current event.
+   In cloud mode this is a read-modify-write: we re-read the row, replay the
+   same change onto the freshest copy and write that back, so one person
+   editing (say) travel can't wipe someone else's items, RSVP or expenses.
+   `fn` must be side-effect free apart from mutating the event it is given —
+   generate ids etc. *before* calling mutate. */
+async function mutate(fn, opts){
+  const ev = currentEvent();
+  if(!ev) return;
+  const id = ev.id;
+
+  fn(ev);                       // optimistic local update
+  save();
+  render(opts);
+
+  if(!CLOUD) return;
+
+  const fresh = await cloudFetchOne(id);
+  if(fresh){
+    fn(fresh);
+    const idx = state.events.findIndex(e => e.id === id);
+    const before = idx >= 0 ? JSON.stringify(state.events[idx]) : "";
+    if(idx >= 0) state.events[idx] = fresh;
+    if(JSON.stringify(fresh) !== before) render();
+    await cloudUpsert(fresh);
+  } else {
+    await cloudUpsert(ev);
+  }
+}
+
+/* ============================================================
+   Small helpers
+   ============================================================ */
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const app = () => document.getElementById("app");
 const currentEvent = () => state.events.find(e => e.id === state.currentId);
-function toast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 1600);
+const slug = s => String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "x";
+const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+const checked = id => { const el = document.getElementById(id); return !!(el && el.checked); };
+const you = n => n === state.me ? " (you)" : "";
+
+/* Toast doubles as the app's polite live region (saved / copied / errors). */
+let toastTimer = null, toastAction = null;
+function toast(msg, action){
+  const box = document.getElementById("toast");
+  const btn = document.getElementById("toast-action");
+  document.getElementById("toast-msg").textContent = msg;
+  toastAction = action && action.onAction ? action.onAction : null;
+  if(action && action.label){ btn.textContent = action.label; btn.hidden = false; }
+  else { btn.hidden = true; btn.textContent = ""; }
+  box.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, action ? 7000 : 2200);
 }
-function go(view, id){ state.view = view; if(id!==undefined) state.currentId = id; if(view==="event") state.tab="bringing"; save(); render(); }
-function setTab(t){ state.tab = t==="costs" ? "costs" : "bringing"; render(); }
+function hideToast(){
+  document.getElementById("toast").classList.remove("show");
+  toastAction = null;
+}
+const announce = msg => toast(msg);
 
-function money(n){ if(n==null||n===""||isNaN(n)) return ""; const v=Math.round(n*100)/100; return "$"+(Number.isInteger(v)?v:v.toFixed(2)); }
-function expensesOf(ev){ if(!ev.expenses) ev.expenses=[]; return ev.expenses; }
+function money(n){
+  if(n==null || n==="" || isNaN(n)) return "";
+  const v = Math.round(Number(n)*100)/100;
+  return "$" + (Number.isInteger(v) ? v : v.toFixed(2));
+}
 
-/* Splitwise-style settle-up.
-   Each UNSETTLED expense is divided equally among its splitBetween people only.
+/* ---------- dates & times ---------- */
+const ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+function parseISODate(s){
+  const m = ISO_RE.exec(String(s||""));
+  if(!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  return isNaN(d.getTime()) ? null : d;
+}
+function fmtDay(d, opts){
+  try{ return d.toLocaleDateString(undefined, opts); }
+  catch(e){ return d.toDateString(); }
+}
+/* "Sat 23 Aug 2026" / "Fri 21 – Sun 23 Aug 2026" — falls back to the old free-text `when`. */
+function fmtWhen(ev){
+  const s = parseISODate(ev.startDate), e = parseISODate(ev.endDate);
+  if(!s) return ev.when || "";
+  const long = {weekday:"short", day:"numeric", month:"short", year:"numeric"};
+  const short = {weekday:"short", day:"numeric", month:"short"};
+  if(!e || e.getTime() === s.getTime()) return fmtDay(s, long);
+  const sameYear = s.getFullYear() === e.getFullYear();
+  return fmtDay(s, sameYear ? short : long) + " – " + fmtDay(e, long);
+}
+function fmtDateShort(iso){
+  const d = parseISODate(iso);
+  return d ? fmtDay(d, {weekday:"short", day:"numeric", month:"short"}) : "";
+}
+/* "18:30" -> "6:30 pm" (leaves anything unexpected alone) */
+function fmtTime(t){
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(t||""));
+  if(!m) return String(t||"");
+  let h = Number(m[1]); const min = m[2];
+  const ap = h >= 12 ? "pm" : "am";
+  h = h % 12; if(h === 0) h = 12;
+  return h + ":" + min + " " + ap;
+}
+const todayISO = () => { const d = new Date(); const p = n => String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()); };
+
+/* ============================================================
+   Event data accessors — all tolerant of older/partial events
+   ============================================================ */
+function itemsOf(ev){ if(!Array.isArray(ev.items)) ev.items = []; return ev.items; }
+function attendeesOf(ev){ if(!Array.isArray(ev.attendees)) ev.attendees = []; return ev.attendees; }
+function expensesOf(ev){ if(!Array.isArray(ev.expenses)) ev.expenses = []; return ev.expenses; }
+function travelOf(ev){
+  if(!ev.travel || typeof ev.travel !== "object" || Array.isArray(ev.travel)) ev.travel = {};
+  return ev.travel;
+}
+function myRsvp(ev){ return attendeesOf(ev).find(a => a && a.name === state.me); }
+
+function statCounts(ev){
+  const grp = itemsOf(ev).filter(i => i && !i.personal);
+  return { need: grp.filter(i => !i.broughtBy).length, got: grp.filter(i => i.broughtBy).length };
+}
+function headCount(ev){ return attendeesOf(ev).reduce((n,a) => n + 1 + (Number(a && a.guests) || 0), 0); }
+
+/* Everyone this event already knows about — used for the duplicate-name check
+   and for the costs people list. */
+function namesInEvent(ev){
+  const out = [];
+  const add = n => { if(n && !out.some(x => x.toLowerCase() === String(n).toLowerCase())) out.push(n); };
+  attendeesOf(ev).forEach(a => add(a && a.name));
+  itemsOf(ev).forEach(i => { if(!i) return; add(i.broughtBy); add(i.owner); });
+  expensesOf(ev).forEach(x => { if(!x) return; add(x.paidBy); (x.splitBetween||[]).forEach(add); });
+  Object.keys(travelOf(ev)).forEach(add);
+  return out;
+}
+
+/* ---------- travel plans ---------- */
+const TRAVEL_METHODS = ["Driving","Ferry","Flight","Train/Bus","Other"];
+function blankLeg(){ return {date:"", time:"", method:"", place:"", details:""}; }
+function normalizeLeg(leg){
+  const l = (leg && typeof leg === "object") ? leg : {};
+  return {
+    date: typeof l.date === "string" ? l.date : "",
+    time: typeof l.time === "string" ? l.time : "",
+    method: typeof l.method === "string" ? l.method : "",
+    place: typeof l.place === "string" ? l.place : "",
+    details: typeof l.details === "string" ? l.details : "",
+  };
+}
+function normalizePlan(plan){
+  const p = (plan && typeof plan === "object") ? plan : {};
+  const ride = (p.ride && typeof p.ride === "object") ? p.ride : {};
+  return {
+    arrive: normalizeLeg(p.arrive),
+    depart: normalizeLeg(p.depart),
+    ride: { offer: !!ride.offer, need: !!ride.need, note: typeof ride.note === "string" ? ride.note : "" },
+    updatedAt: typeof p.updatedAt === "string" ? p.updatedAt : "",
+  };
+}
+function planFor(ev, name){
+  const raw = travelOf(ev)[name];
+  return raw ? normalizePlan(raw) : null;
+}
+function legHasContent(l){ return !!(l.date || l.time || l.method || l.place || l.details); }
+function planHasContent(p){ return !!(p && (legHasContent(p.arrive) || legHasContent(p.depart) || p.ride.offer || p.ride.need || p.ride.note)); }
+function planSortKey(p){
+  const a = p && p.arrive ? p.arrive : {};
+  return (a.date || "9999-99-99") + " " + (a.time || "99:99");
+}
+
+/* People shown on the Travel tab: everyone attending, anyone with a plan, plus you. */
+function travelPeople(ev){
+  const names = [];
+  const add = n => { if(n && !names.includes(n)) names.push(n); };
+  attendeesOf(ev).forEach(a => add(a && a.name));
+  Object.keys(travelOf(ev)).forEach(add);
+  add(state.me);
+  const withPlan = [], without = [];
+  names.forEach(n => {
+    const p = planFor(ev, n);
+    if(planHasContent(p)) withPlan.push({name:n, plan:p});
+    else without.push({name:n, plan:p});
+  });
+  withPlan.sort((a,b) => {
+    const k = planSortKey(a.plan).localeCompare(planSortKey(b.plan));
+    return k !== 0 ? k : a.name.localeCompare(b.name);
+  });
+  without.sort((a,b) => (a.name === state.me ? -1 : b.name === state.me ? 1 : a.name.localeCompare(b.name)));
+  return withPlan.concat(without);
+}
+
+/* ============================================================
+   Costs maths
+   ============================================================ */
+/* Each UNSETTLED expense is divided equally among its splitBetween people only.
    Settled expenses still count toward "spent" but are left out of the balances. */
 function settleUp(ev){
   const exps = expensesOf(ev);
-  const paid={}, owed={};
-  let total=0, settledTotal=0;
-  exps.forEach(x=>{
-    const amt = Number(x.amount)||0;
+  const paid = {}, owed = {};
+  let total = 0, settledTotal = 0;
+  exps.forEach(x => {
+    if(!x) return;
+    const amt = Number(x.amount) || 0;
     total += amt;
     if(x.settled){ settledTotal += amt; return; }
     if(x.paidBy) paid[x.paidBy] = (paid[x.paidBy]||0) + amt;
     const split = (x.splitBetween||[]).filter(Boolean);
     if(split.length){
-      const share = amt/split.length;
-      split.forEach(n=>{ owed[n] = (owed[n]||0) + share; });
+      const share = amt / split.length;
+      split.forEach(n => { owed[n] = (owed[n]||0) + share; });
     }
   });
   const names = [...new Set([...Object.keys(paid), ...Object.keys(owed)])];
-  const rows = names.map(n=>{ const p=paid[n]||0, o=owed[n]||0; return {name:n, paid:p, owed:o, bal:p-o}; })
-                    .sort((a,b)=>b.bal-a.bal);
+  const rows = names.map(n => { const p = paid[n]||0, o = owed[n]||0; return {name:n, paid:p, owed:o, bal:p-o}; })
+                    .sort((a,b) => b.bal - a.bal);
   return {total, settledTotal, rows, count:exps.length};
 }
 
-/* ---------- actions ---------- */
-function setName(v){ const n=(v||"").trim(); if(!n) return; state.me=n; save(); render(); }
-function newEvent(){
-  const name=val("ev-name"), when=val("ev-when"), where=val("ev-where");
-  if(!name){ toast("Give your event a name"); return; }
-  const id = uid();
-  state.events.unshift({ id, name, when, where, attendees:[], items:[], expenses:[] });
-  go("event", id);
-  toast("Event created 🎉");
-}
-function addItem(kind){
-  const ev=currentEvent(); if(!ev) return;
-  const title=val("it-title"), note=val("it-note");
-  if(!title){ toast("What's the item?"); return; }
-  ev.items.push({ id:uid(), title, note, broughtBy: kind==="bring" ? state.me : null });
-  ["it-title","it-note"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
-  save(); render();
-  toast(kind==="bring" ? "Added — thanks for bringing it!" : "Added to the needed list");
+/* Turn balances into "Nel pays Pat $100" instructions (greedy largest-first match). */
+function settlePlan(rows){
+  const debtors  = rows.filter(r => r.bal < -0.005).map(r => ({name:r.name, amt:-r.bal})).sort((a,b) => b.amt - a.amt);
+  const creditors= rows.filter(r => r.bal >  0.005).map(r => ({name:r.name, amt: r.bal})).sort((a,b) => b.amt - a.amt);
+  const out = [];
+  let i = 0, j = 0, guard = 0;
+  while(i < debtors.length && j < creditors.length && guard++ < 500){
+    const amt = Math.min(debtors[i].amt, creditors[j].amt);
+    if(amt >= 0.01) out.push({from:debtors[i].name, to:creditors[j].name, amt});
+    debtors[i].amt -= amt; creditors[j].amt -= amt;
+    if(debtors[i].amt < 0.01) i++;
+    if(creditors[j].amt < 0.01) j++;
+  }
+  return out;
 }
 
-/* ---- RSVP ---- */
-function attendeesOf(ev){ if(!ev.attendees) ev.attendees=[]; return ev.attendees; }
-function myRsvp(ev){ return attendeesOf(ev).find(a=>a.name===state.me); }
-function rsvpIn(){ const ev=currentEvent(); if(!ev) return; if(!myRsvp(ev)){ attendeesOf(ev).push({name:state.me, guests:0}); save(); render(); toast("You're in 🙌"); } }
-function rsvpOut(){ const ev=currentEvent(); if(!ev) return; ev.attendees = attendeesOf(ev).filter(a=>a.name!==state.me); save(); render(); }
-function setGuests(d){ const ev=currentEvent(); const a=myRsvp(ev); if(!a) return; a.guests=Math.max(0,(a.guests||0)+d); save(); render(); }
-function setAddMode(mode){
-  const group = mode !== "packing";
-  document.getElementById("seg-group").classList.toggle("active", group);
-  document.getElementById("seg-pack").classList.toggle("active", !group);
-  document.getElementById("grp-btns").style.display = group ? "" : "none";
-  document.getElementById("pack-btns").style.display = group ? "none" : "";
-  document.getElementById("add-hint").textContent = group
-    ? "Something the group needs, or that you'll bring for everyone."
-    : "Your own gear to pack. Everyone can see it, but only you can change it.";
-}
-function addPersonal(){
-  const ev=currentEvent(); if(!ev) return;
-  const title=val("it-title"), note=val("it-note");
-  if(!title){ toast("What are you packing?"); return; }
-  ev.items.push({ id:uid(), title, note, personal:true, owner:state.me, broughtBy:null });
-  ["it-title","it-note"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+/* ============================================================
+   Navigation + identity
+   ============================================================ */
+function go(view, id){
+  state.view = view;
+  if(id !== undefined) state.currentId = id;
+  if(view === "event") state.tab = "bringing";
+  state.ui.addOpen = false; state.ui.expOpen = false;
+  state.ui.travelEditing = false; state.ui.newEventOpen = false; state.ui.error = null;
+  if(view === "event" && id) { try{ history.replaceState(null,"","#e=" + id); }catch(e){} }
+  else { try{ history.replaceState(null,"", location.pathname + location.search); }catch(e){} }
   save(); render();
-  toast("Added to your packing list 🎒");
+}
+function setTab(t){
+  state.tab = ["bringing","travel","costs"].includes(t) ? t : "bringing";
+  state.ui.error = null;
+  save(); render();
+  const btn = document.getElementById("tab-" + state.tab);
+  if(btn) btn.focus();
+}
+
+function submitName(raw){
+  const n = String(raw||"").trim().replace(/\s+/g," ");
+  if(!n){ state.ui.error = "Please enter your first name."; render(); return; }
+  const ev = currentEvent();
+  const clash = ev ? namesInEvent(ev).find(x => x.toLowerCase() === n.toLowerCase() && x !== state.me) : null;
+  if(clash){ state.ui.nameClash = clash; state.ui.error = null; render(); return; }
+  state.me = n; state.ui.error = null; state.ui.nameClash = null;
+  save(); render();
+}
+function confirmClashName(){
+  if(!state.ui.nameClash) return;
+  state.me = state.ui.nameClash;      // reuse the exact existing spelling
+  state.ui.nameClash = null; state.ui.error = null;
+  save(); render();
+  announce("Continuing as " + state.me);
+}
+function cancelClashName(){ state.ui.nameClash = null; state.ui.error = null; render(); }
+function changeName(){ state.ui.nameClash = null; state.ui.error = null; state.me = null; save(); render(); }
+
+/* ============================================================
+   Events
+   ============================================================ */
+function createEvent(){
+  const name = val("ev-name");
+  const startDate = val("ev-start");
+  const endDate = val("ev-end");
+  const where = val("ev-where");
+
+  if(!name){ state.ui.error = "Give your event a name."; render(); focusEl("ev-name"); return; }
+  if(endDate && !startDate){ state.ui.error = "Add a start date as well as an end date."; render(); focusEl("ev-start"); return; }
+  if(startDate && !parseISODate(startDate)){ state.ui.error = "That start date doesn't look right."; render(); focusEl("ev-start"); return; }
+  if(endDate && !parseISODate(endDate)){ state.ui.error = "That end date doesn't look right."; render(); focusEl("ev-end"); return; }
+  if(startDate && endDate && endDate < startDate){
+    state.ui.error = "The end date can't be before the start date."; render(); focusEl("ev-end"); return;
+  }
+
+  const id = uid();
+  const ev = { id, name, startDate, endDate, where, attendees:[], items:[], expenses:[], travel:{} };
+  ev.when = fmtWhen(ev);   // keep the legacy free-text field in step
+  state.events.unshift(ev);
+  state.ui.error = null;
+  if(CLOUD) cloudUpsert(ev); else saveDemoEvents();
+  go("event", id);
+  announce("Event created");
+}
+
+/* ============================================================
+   RSVP
+   ============================================================ */
+function rsvpIn(){
+  const ev = currentEvent(); if(!ev || !state.me) return;
+  if(myRsvp(ev)) return;
+  const me = state.me;
+  mutate(e => { if(!attendeesOf(e).some(a => a && a.name === me)) attendeesOf(e).push({name:me, guests:0}); });
+  announce("You're on the list");
+}
+function rsvpOut(){
+  const ev = currentEvent(); if(!ev) return;
+  const me = state.me;
+  const prev = myRsvp(ev);
+  const guests = prev ? (prev.guests||0) : 0;
+  mutate(e => { e.attendees = attendeesOf(e).filter(a => a && a.name !== me); });
+  toast("You're off the list", {label:"Undo", onAction:() =>
+    mutate(e => { if(!attendeesOf(e).some(a => a && a.name === me)) attendeesOf(e).push({name:me, guests}); })});
+}
+function setGuests(d){
+  const ev = currentEvent(); if(!ev || !myRsvp(ev)) return;
+  const me = state.me;
+  mutate(e => {
+    const a = attendeesOf(e).find(x => x && x.name === me);
+    if(a) a.guests = Math.max(0, (Number(a.guests)||0) + d);
+  });
+  const now = (myRsvp(currentEvent()) || {}).guests || 0;
+  announce(now === 0 ? "No extra guests" : now === 1 ? "1 guest with you" : now + " guests with you");
+}
+
+/* ============================================================
+   Items — group list + personal packing
+   ============================================================ */
+function setAddMode(mode){ state.ui.addMode = mode === "packing" ? "packing" : "group"; state.ui.error = null; render(); }
+function toggleAdd(open){
+  state.ui.addOpen = open === undefined ? !state.ui.addOpen : !!open;
+  state.ui.error = null;
+  render();
+  if(state.ui.addOpen) focusEl("it-title");
+}
+
+function addItem(kind){
+  const ev = currentEvent(); if(!ev) return;
+  const title = val("it-title"), note = val("it-note");
+  if(!title){
+    state.ui.error = state.ui.addMode === "packing" ? "What are you packing?" : "What's the item?";
+    render(); focusEl("it-title"); return;
+  }
+  const personal = state.ui.addMode === "packing";
+  const item = personal
+    ? { id:uid(), title, note, personal:true, owner:state.me, broughtBy:null }
+    : { id:uid(), title, note, broughtBy: kind === "bring" ? state.me : null };
+  state.ui.error = null;
+  mutate(e => { itemsOf(e).push(item); }, {clear:["it-title","it-note"]});
+  focusEl("it-title");
+  announce(personal ? "Added to your packing list"
+        : kind === "bring" ? "Added — thanks for bringing it" : "Added to the needed list");
 }
 function claim(itemId){
-  const ev=currentEvent(); const it=ev?.items.find(i=>i.id===itemId); if(!it) return;
-  it.broughtBy = state.me; save(); render(); toast("You've got it 👍");
+  const me = state.me;
+  mutate(e => { const it = itemsOf(e).find(i => i && i.id === itemId); if(it) it.broughtBy = me; });
+  announce("You've got it");
 }
 function cancelClaim(itemId){
-  const ev=currentEvent(); const it=ev?.items.find(i=>i.id===itemId); if(!it) return;
-  it.broughtBy = null; save(); render();
+  mutate(e => { const it = itemsOf(e).find(i => i && i.id === itemId); if(it) it.broughtBy = null; });
+  announce("Put back on the needed list");
 }
 function removeItem(itemId){
-  const ev=currentEvent(); if(!ev) return;
-  ev.items = ev.items.filter(i=>i.id!==itemId); save(); render();
+  const ev = currentEvent(); if(!ev) return;
+  const items = itemsOf(ev);
+  const idx = items.findIndex(i => i && i.id === itemId);
+  if(idx < 0) return;
+  const it = items[idx];
+  if(it.personal && it.owner !== state.me){ announce("Only " + it.owner + " can change their packing list"); return; }
+  const copy = JSON.parse(JSON.stringify(it));
+  mutate(e => { e.items = itemsOf(e).filter(i => i && i.id !== itemId); });
+  toast('Removed "' + it.title + '"', {label:"Undo", onAction:() =>
+    mutate(e => {
+      const list = itemsOf(e);
+      if(list.some(i => i && i.id === copy.id)) return;
+      list.splice(Math.min(idx, list.length), 0, copy);
+    })});
 }
 
-/* ---- expenses ---- */
+/* ============================================================
+   Travel
+   ============================================================ */
+function editTravel(open){
+  state.ui.travelEditing = open === undefined ? !state.ui.travelEditing : !!open;
+  state.ui.error = null;
+  render();
+  if(state.ui.travelEditing) focusEl("tv-arrive-date");
+}
+function saveTravel(){
+  const ev = currentEvent(); if(!ev || !state.me) return;
+  const plan = {
+    arrive:{ date:val("tv-arrive-date"), time:val("tv-arrive-time"), method:val("tv-arrive-method"),
+             place:val("tv-arrive-from"), details:val("tv-arrive-details") },
+    depart:{ date:val("tv-depart-date"), time:val("tv-depart-time"), method:val("tv-depart-method"),
+             place:val("tv-depart-to"), details:val("tv-depart-details") },
+    ride:{ offer:checked("tv-ride-offer"), need:checked("tv-ride-need"), note:val("tv-ride-note") },
+    updatedAt: new Date().toISOString(),
+  };
+  if(plan.arrive.date && !parseISODate(plan.arrive.date)){ state.ui.error = "That arrival date doesn't look right."; render(); return; }
+  if(plan.depart.date && !parseISODate(plan.depart.date)){ state.ui.error = "That departure date doesn't look right."; render(); return; }
+  if(plan.arrive.date && plan.depart.date && plan.depart.date < plan.arrive.date){
+    state.ui.error = "Heading home before you arrive? Check those dates."; render(); focusEl("tv-depart-date"); return;
+  }
+  const me = state.me;
+  state.ui.error = null;
+  state.ui.travelEditing = false;
+  mutate(e => { travelOf(e)[me] = plan; });     // only touches this person's travel entry
+  announce("Travel plan saved");
+}
+function removeTravel(){
+  const ev = currentEvent(); if(!ev || !state.me) return;
+  const me = state.me;
+  const existing = travelOf(ev)[me];
+  if(!existing) return;
+  const copy = JSON.parse(JSON.stringify(existing));
+  state.ui.travelEditing = false;
+  mutate(e => { delete travelOf(e)[me]; });
+  toast("Travel plan removed", {label:"Undo", onAction:() => mutate(e => { travelOf(e)[me] = copy; })});
+}
+
+/* ============================================================
+   Expenses
+   ============================================================ */
+function toggleExp(open){
+  state.ui.expOpen = open === undefined ? !state.ui.expOpen : !!open;
+  state.ui.error = null;
+  render();
+  if(state.ui.expOpen) focusEl("ex-title");
+}
 function addExpense(){
-  const ev=currentEvent(); if(!ev) return;
-  const title=val("ex-title");
-  if(!title){ toast("What was the expense?"); return; }
-  const amount=parseFloat(val("ex-amount"));
-  if(isNaN(amount) || amount<=0){ toast("Enter an amount"); return; }
-  const sel=document.getElementById("ex-paidby");
+  const ev = currentEvent(); if(!ev) return;
+  const title = val("ex-title");
+  if(!title){ state.ui.error = "What was the expense for?"; render(); focusEl("ex-title"); return; }
+  const amount = parseFloat(val("ex-amount"));
+  if(isNaN(amount) || amount <= 0){ state.ui.error = "Enter an amount greater than zero."; render(); focusEl("ex-amount"); return; }
+  const sel = document.getElementById("ex-paidby");
   const paidBy = sel && sel.value ? sel.value : state.me;
-  const splitBetween=[...document.querySelectorAll("#ex-split input[type=checkbox]")]
-    .filter(c=>c.checked).map(c=>c.dataset.name);
-  if(!splitBetween.length){ toast("Pick at least one person to split with"); return; }
-  const st=document.getElementById("ex-settled");
-  expensesOf(ev).push({ id:uid(), title, amount, paidBy, splitBetween, settled: !!(st && st.checked) });
-  save(); render();
-  toast(st && st.checked ? "Logged as already settled" : "Expense added");
+  if(!paidBy){ state.ui.error = "Choose who paid."; render(); return; }
+  const splitBetween = [...document.querySelectorAll("#ex-split input[type=checkbox]")]
+    .filter(c => c.checked).map(c => c.dataset.name);
+  if(!splitBetween.length){ state.ui.error = "Pick at least one person to split this between."; render(); return; }
+  const settled = checked("ex-settled");
+  const exp = { id:uid(), title, amount:Math.round(amount*100)/100, paidBy, splitBetween, settled };
+  state.ui.error = null;
+  state.ui.expOpen = false;
+  mutate(e => { expensesOf(e).push(exp); });
+  announce(settled ? "Logged as already settled" : "Expense added");
 }
 function removeExpense(expId){
-  const ev=currentEvent(); if(!ev) return;
-  const x=expensesOf(ev).find(e=>e.id===expId); if(!x) return;
-  if(x.paidBy!==state.me){ toast("Only the person who paid can remove this"); return; }
-  ev.expenses = expensesOf(ev).filter(e=>e.id!==expId); save(); render();
+  const ev = currentEvent(); if(!ev) return;
+  const list = expensesOf(ev);
+  const idx = list.findIndex(x => x && x.id === expId);
+  if(idx < 0) return;
+  const x = list[idx];
+  if(x.paidBy !== state.me){ announce("Only " + x.paidBy + ", who paid, can remove this"); return; }
+  const copy = JSON.parse(JSON.stringify(x));
+  mutate(e => { e.expenses = expensesOf(e).filter(y => y && y.id !== expId); });
+  toast('Removed "' + x.title + '"', {label:"Undo", onAction:() =>
+    mutate(e => {
+      const l = expensesOf(e);
+      if(l.some(y => y && y.id === copy.id)) return;
+      l.splice(Math.min(idx, l.length), 0, copy);
+    })});
 }
-function val(id){ const el=document.getElementById(id); return el ? el.value.trim() : ""; }
-function copyInvite(){
-  const ev=currentEvent();
-  const txt = CLOUD
-    ? `Join "${ev.name}" — add what you're bringing: ${location.href.split("#")[0]}`
-    : `Join "${ev.name}" and add what you're bringing! (this list is saved on my device only, so there's no link to open — tell me what you're bringing and I'll add it)`;
-  try{ navigator.clipboard.writeText(txt); toast(CLOUD ? "Invite link copied" : "Invite text copied"); }
-  catch(e){ toast("Copy not available here"); }
-}
-
-/* ---------- views ---------- */
-function render(){
-  if(!state.me){ renderName(); return; }
-  if(state.view === "event" && currentEvent()){ renderEvent(); return; }
-  renderHome();
+function toggleSettled(expId){
+  mutate(e => { const x = expensesOf(e).find(y => y && y.id === expId); if(x) x.settled = !x.settled; });
 }
 
-function renderName(){
-  app().innerHTML = `
-    <div class="center">
-      <h1>Who's Bringing What</h1>
-      <p class="sub" style="margin-bottom:18px">No sign-ups — just tell us your first name so people know who's bringing what.</p>
-      <input id="name-in" placeholder="Your first name" autofocus onkeydown="if(event.key==='Enter')setName(this.value)">
-      <div style="height:12px"></div>
-      <button class="btn primary block" onclick="setName(document.getElementById('name-in').value)">Let's go</button>
-    </div>`;
+/* ============================================================
+   Sharing
+   ============================================================ */
+function eventUrl(ev){ return location.href.split("#")[0] + "#e=" + ev.id; }
+function inviteText(ev){
+  return CLOUD
+    ? 'Join "' + ev.name + '" — add what you\'re bringing: ' + eventUrl(ev)
+    : 'Join "' + ev.name + '" and add what you\'re bringing! (this list is saved on my device only, so there\'s no link to open — tell me what you\'re bringing and I\'ll add it)';
+}
+async function copyToClipboard(text){
+  try{
+    if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; }
+  }catch(e){}
+  try{
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly",""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){ return false; }
+}
+async function copyInvite(){
+  const ev = currentEvent(); if(!ev) return;
+  const ok = await copyToClipboard(inviteText(ev));
+  announce(ok ? (CLOUD ? "Link copied" : "Invite text copied") : "Couldn't copy here — select the link instead");
+}
+async function shareInvite(){
+  const ev = currentEvent(); if(!ev) return;
+  if(navigator.share){
+    try{
+      await navigator.share(CLOUD
+        ? {title:ev.name, text:'Join "' + ev.name + '" — add what you\'re bringing', url:eventUrl(ev)}
+        : {title:ev.name, text:inviteText(ev)});
+      return;
+    }catch(e){ if(e && e.name === "AbortError") return; }
+  }
+  copyInvite();
 }
 
-function statCounts(ev){
-  const grp = ev.items.filter(i=>!i.personal);
-  const need = grp.filter(i=>!i.broughtBy).length;
-  const got  = grp.filter(i=> i.broughtBy).length;
-  return {need, got};
+/* ============================================================
+   Rendering
+   ============================================================ */
+function focusEl(id){ const el = document.getElementById(id); if(el) el.focus(); }
+
+/* Re-renders replace the whole view, so keep whatever the user has typed
+   (a realtime update from someone else must not eat your half-filled form). */
+function snapshotForm(){
+  const values = {};
+  document.querySelectorAll("#app input[id], #app select[id], #app textarea[id]").forEach(el => {
+    values[el.id] = (el.type === "checkbox" || el.type === "radio") ? {c:el.checked} : {v:el.value};
+  });
+  const a = document.activeElement;
+  const focus = a && a.id && a.closest && a.closest("#app") ? a.id : null;
+  let caret = null;
+  try{ if(focus && a.selectionStart != null) caret = a.selectionStart; }catch(e){}
+  return {values, focus, caret};
+}
+function restoreForm(snap, clear){
+  const skip = clear || [];
+  Object.keys(snap.values).forEach(id => {
+    if(skip.includes(id)) return;
+    const el = document.getElementById(id);
+    if(!el) return;
+    const v = snap.values[id];
+    if("c" in v) el.checked = v.c; else el.value = v.v;
+  });
+  if(snap.focus){
+    const el = document.getElementById(snap.focus);
+    if(el){
+      try{
+        el.focus({preventScroll:true});
+        if(snap.caret != null && el.setSelectionRange) el.setSelectionRange(snap.caret, snap.caret);
+      }catch(e){}
+    }
+  }
 }
 
-function renderHome(){
+function render(opts){
+  const snap = snapshotForm();
+  let html;
+  if(!state.me) html = viewName();
+  else if(state.view === "event" && currentEvent()) html = viewEvent(currentEvent());
+  else html = viewHome();
+  app().innerHTML = html;
+  restoreForm(snap, opts && opts.clear);
+}
+
+function errHtml(){
+  return state.ui.error ? '<p class="err" role="alert">' + esc(state.ui.error) + "</p>" : "";
+}
+
+function statusHtml(){
+  const map = {
+    live:   {cls:"live",  label:"Live",           title:"Connected — everyone with the link sees the same list"},
+    connecting:{cls:"",   label:"Connecting…",    title:"Connecting to the shared list"},
+    err:    {cls:"err",   label:"Offline",        title:"Not connected — changes may not be shared right now"},
+    local:  {cls:"local", label:"On this device", title:"Demo mode — this list is saved on this device only"},
+  };
+  const s = map[state.conn] || map.local;
+  return '<span class="status ' + s.cls + '" id="conn-status" title="' + esc(s.title) + '">' +
+           '<span class="dot" aria-hidden="true"></span>' + esc(s.label) +
+           '<span class="sr-only">. ' + esc(s.title) + "</span></span>";
+}
+function statusEl(){
+  const d = document.createElement("div");
+  d.innerHTML = statusHtml();
+  return d.firstElementChild;
+}
+
+/* ---------- name gate ---------- */
+function viewName(){
+  const clash = state.ui.nameClash;
+  const body = clash
+    ? '<div class="card">' +
+        '<p class="card-title">Continue as ' + esc(clash) + "?</p>" +
+        '<p class="hint" style="margin-top:6px">Someone called ' + esc(clash) + " is already part of this event. " +
+        "If that's you, carry on and you'll pick up their RSVP, items and expenses. If not, use a different name so no one gets mixed up.</p>" +
+        '<div class="actions-row">' +
+          '<button type="button" class="btn primary" data-act="confirm-name">Continue as ' + esc(clash) + "</button>" +
+          '<button type="button" class="btn" data-act="cancel-name">Use a different name</button>' +
+        "</div></div>"
+    : '<form data-form="set-name" novalidate>' +
+        '<div class="field">' +
+          '<label class="fld" for="name-in">Your first name</label>' +
+          '<input type="text" id="name-in" autocomplete="given-name" autocapitalize="words" placeholder="e.g. Pat">' +
+        "</div>" +
+        errHtml() +
+        '<div style="height:16px"></div>' +
+        '<button type="submit" class="btn primary block">Continue</button>' +
+      "</form>";
+
+  return '<main class="center">' +
+    "<h1>Who's Bringing What</h1>" +
+    '<p class="sub">No sign-ups — just your first name, so everyone knows who\'s bringing what.</p>' +
+    body +
+  "</main>";
+}
+
+/* ---------- home ---------- */
+function viewHome(){
   const cards = state.events.map(ev => {
-    const {need,got} = statCounts(ev);
-    return `<div class="card event-card" onclick="go('event','${ev.id}')">
-      <div>
-        <h3>${esc(ev.name)}</h3>
-        <div class="meta">${esc(ev.when||"")}${ev.where?" · "+esc(ev.where):""}</div>
-        <div style="margin-top:8px; display:flex; gap:6px">
-          <span class="pillstat need">${need} needed</span>
-          <span class="pillstat got">${got} covered</span>
-        </div>
-      </div>
-      <span class="chev">›</span>
-    </div>`;
+    const {need, got} = statCounts(ev);
+    const heads = headCount(ev);
+    const when = fmtWhen(ev);
+    const meta = [when, ev.where].filter(Boolean).map(esc).join(" · ");
+    return '<button type="button" class="card event-card" data-act="go-event" data-id="' + esc(ev.id) + '">' +
+      '<span class="ec-body">' +
+        '<span class="ec-name">' + esc(ev.name) + "</span>" +
+        (meta ? '<span class="ec-meta">' + meta + "</span>" : "") +
+        '<span class="ec-pills">' +
+          '<span class="pill plain">' + heads + " going</span>" +
+          '<span class="pill need">' + need + " needed</span>" +
+          '<span class="pill got">' + got + " covered</span>" +
+        "</span>" +
+      "</span>" +
+      '<span class="chev" aria-hidden="true">›</span>' +
+    "</button>";
   }).join("");
 
-  app().innerHTML = `
-    <header>
-      <div class="hrow">
-        <div><h1>Who's Bringing What</h1><p class="sub">Your events</p></div>
-        <div class="who">Hi, <b>${esc(state.me)}</b> · <span class="link" onclick="changeName()">change</span></div>
-      </div>
-    </header>
-    <div class="wrap">
-      ${state.events.length ? cards : `<div class="empty">No events yet — create your first one below.</div>`}
-      <div class="card">
-        <div style="font-weight:700; margin-bottom:2px">➕ New event</div>
-        <label class="fld" for="ev-name">Event name</label>
-        <input id="ev-name" placeholder="e.g. Sarah's Backyard BBQ">
-        <div class="row">
-          <div><label class="fld" for="ev-when">When</label><input id="ev-when" placeholder="Sat Aug 23, 6pm"></div>
-          <div><label class="fld" for="ev-where">Where</label><input id="ev-where" placeholder="Sarah's place"></div>
-        </div>
-        <div style="height:12px"></div>
-        <button class="btn primary block" onclick="newEvent()">Create event</button>
-      </div>
-    </div>`;
+  const formOpen = state.ui.newEventOpen || state.events.length === 0;
+  const form = formOpen
+    ? '<div class="card">' +
+        '<p class="card-title">New event</p>' +
+        '<form data-form="create-event" novalidate>' +
+          '<div class="field">' +
+            '<label class="fld" for="ev-name">Event name</label>' +
+            '<input type="text" id="ev-name" placeholder="e.g. Sarah\'s Backyard BBQ" autocapitalize="words">' +
+          "</div>" +
+          '<div class="row" style="margin-top:14px">' +
+            '<div><label class="fld" for="ev-start">Start date</label><input type="date" id="ev-start"></div>' +
+            '<div><label class="fld" for="ev-end">End date <span class="hint">(optional)</span></label><input type="date" id="ev-end"></div>' +
+          "</div>" +
+          '<div class="field">' +
+            '<label class="fld" for="ev-where">Where <span class="hint">(optional)</span></label>' +
+            '<input type="text" id="ev-where" placeholder="e.g. Sarah\'s place">' +
+          "</div>" +
+          errHtml() +
+          '<div class="actions-row">' +
+            '<button type="submit" class="btn primary">Create event</button>' +
+            (state.events.length ? '<button type="button" class="btn quiet" data-act="toggle-new-event" data-open="0">Cancel</button>' : "") +
+          "</div>" +
+        "</form>" +
+      "</div>"
+    : '<button type="button" class="btn block" data-act="toggle-new-event" data-open="1">New event</button>';
+
+  return "<header>" +
+      '<div class="topbar"><h1>Who\'s Bringing What</h1>' + statusHtml() + "</div>" +
+      '<div class="idrow">' +
+        '<p class="sub">Your events</p>' +
+        '<p class="who">You\'re <b>' + esc(state.me) + "</b> · " +
+          '<button type="button" class="linkbtn" data-act="change-name">Change</button></p>' +
+      "</div>" +
+    "</header>" +
+    '<main class="wrap">' +
+      (state.events.length
+        ? '<div class="event-list">' + cards + "</div>"
+        : '<p class="empty" style="margin-top:16px">No events yet — create your first one below.</p>') +
+      '<div style="height:16px"></div>' +
+      form +
+    "</main>";
 }
 
-function renderEvent(){
-  const ev = currentEvent();
-  const {need,got} = statCounts(ev);
-  const needed = ev.items.filter(i=>!i.personal && !i.broughtBy);
-  const covered = ev.items.filter(i=>!i.personal && i.broughtBy);
+/* ---------- event shell ---------- */
+function viewEvent(ev){
+  const tab = ["bringing","travel","costs"].includes(state.tab) ? state.tab : "bringing";
+  const when = fmtWhen(ev);
+  const meta = [when, ev.where].filter(Boolean).map(esc).join(" · ");
+  const tabDef = [["bringing","Bringing"],["travel","Travel"],["costs","Costs"]];
 
-  // Personal packing lists (visible to all, editable only by owner)
-  const personal = ev.items.filter(i=>i.personal);
-  const owners = [...new Set(personal.map(i=>i.owner))];
-  // put your own list first
-  owners.sort((a,b)=> (a===state.me?-1:0) - (b===state.me?-1:0));
-  const packHtml = personal.length ? owners.map(o=>{
-    const mineOwn = o===state.me;
-    const its = personal.filter(i=>i.owner===o);
-    return `<div class="pack">
-      <div class="pack-owner">${esc(o)}${mineOwn?" (you)":""}<span class="tag">packing · view only</span></div>
-      <div class="pack-items">${its.map(i=>`<span class="pchip">${esc(i.title)}${mineOwn?`<span class="x" onclick="removeItem('${i.id}')">✕</span>`:""}</span>`).join("")}</div>
-    </div>`;
-  }).join("") : `<div class="empty">No packing lists yet — add your own gear below with “My packing”.</div>`;
+  const tabs = tabDef.map(([key, label]) => {
+    const on = key === tab;
+    return '<button type="button" class="tab-btn" role="tab" id="tab-' + key + '"' +
+      ' aria-selected="' + on + '"' + (on ? ' aria-controls="panel-' + key + '"' : "") +
+      ' tabindex="' + (on ? "0" : "-1") + '" data-act="set-tab" data-tab="' + key + '">' + label + "</button>";
+  }).join("");
 
-  // RSVP
+  const panel = tab === "costs" ? viewCosts(ev) : tab === "travel" ? viewTravel(ev) : viewBringing(ev);
+
+  return "<header>" +
+      '<button type="button" class="back" data-act="go-home"><span aria-hidden="true">‹</span> All events</button>' +
+      '<div class="ev-head"><div class="ev-titles">' +
+        '<h1 class="ev-title">' + esc(ev.name) + "</h1>" +
+        (meta ? '<p class="meta" style="margin-top:4px">' + meta + "</p>" : "") +
+      "</div></div>" +
+      '<div class="share-row">' +
+        statusHtml() +
+        (navigator.share ? '<button type="button" class="btn sm" data-act="share">Share</button>' : "") +
+        '<button type="button" class="btn sm" data-act="copy-link">Copy ' + (CLOUD ? "link" : "invite") + "</button>" +
+        (CLOUD ? "" : '<span class="invite">Invite code <span class="code">' + esc(ev.id) + "</span></span>") +
+        '<span class="spacer"></span>' +
+        '<span class="you">You\'re <b>' + esc(state.me) + "</b> · " +
+          '<button type="button" class="linkbtn" data-act="change-name">Change</button></span>' +
+      "</div>" +
+    "</header>" +
+    '<main class="wrap">' +
+      '<div class="tabs" role="tablist" aria-label="Event sections">' + tabs + "</div>" +
+      '<div id="panel-' + tab + '" role="tabpanel" aria-labelledby="tab-' + tab + '" tabindex="0">' + panel + "</div>" +
+    "</main>";
+}
+
+/* ---------- bringing tab ---------- */
+function viewBringing(ev){
+  const items = itemsOf(ev);
+  const {need, got} = statCounts(ev);
+  const needed  = items.filter(i => i && !i.personal && !i.broughtBy);
+  const covered = items.filter(i => i && !i.personal && i.broughtBy);
+  const personal = items.filter(i => i && i.personal);
+
+  /* RSVP */
   const att = attendeesOf(ev);
   const mine = myRsvp(ev);
-  const totalHeads = att.reduce((n,a)=>n+1+(a.guests||0),0);
+  const heads = headCount(ev);
   const chips = att.length
-    ? att.map(a=>`<span class="chip"><b>${esc(a.name)}</b>${a.name===state.me?" ✓":""}${a.guests?`<span class="g">+${a.guests}</span>`:""}</span>`).join("")
-    : `<span class="hint">No RSVPs yet — tap "I'm coming".</span>`;
-  const rsvpControl = mine
-    ? `<div class="rsvp-controls">
-        <div class="stepper">
-          <span class="lbl">You're in · guests</span>
-          <button class="step" onclick="setGuests(-1)" aria-label="One fewer guest">−</button>
-          <b class="count">${mine.guests||0}</b>
-          <button class="step" onclick="setGuests(1)" aria-label="One more guest">+</button>
-        </div>
-        <button class="leave" onclick="rsvpOut()">Can't make it</button>
-      </div>`
-    : `<div class="rsvp-controls"><button class="btn go sm" onclick="rsvpIn()">I'm coming</button></div>`;
-  const rsvpHtml = `<div class="card rsvp">
-      <div class="rsvp-head">Who's coming <span class="hint">(${totalHeads} incl. guests)</span></div>
-      ${rsvpControl}
-      <div class="chips">${chips}</div>
-    </div>`;
+    ? '<ul class="chips" style="margin-top:14px">' + att.map(a =>
+        '<li class="chip"><b>' + esc(a.name) + "</b>" + (a.name === state.me ? " (you)" : "") +
+        (a.guests ? '<span class="g">+' + a.guests + "</span>" : "") + "</li>").join("") + "</ul>"
+    : '<p class="hint" style="margin-top:12px">No RSVPs yet — tap "I\'m coming".</p>';
+  const rsvpControls = mine
+    ? '<div class="rsvp-controls">' +
+        '<div class="stepper" role="group" aria-label="Guests coming with you">' +
+          '<span class="lbl">Guests with you</span>' +
+          '<button type="button" class="step" data-act="guests" data-d="-1" aria-label="One fewer guest">−</button>' +
+          '<b class="count">' + (mine.guests || 0) + "</b>" +
+          '<button type="button" class="step" data-act="guests" data-d="1" aria-label="One more guest">+</button>' +
+        "</div>" +
+        '<button type="button" class="linkbtn mutedlink" data-act="rsvp-out">Can\'t make it</button>' +
+      "</div>"
+    : '<div class="rsvp-controls"><button type="button" class="btn go" data-act="rsvp-in">I\'m coming</button></div>';
 
-  const neededHtml = needed.length ? needed.map(it => `
-    <div class="item need">
-      <div class="body">
-        <div class="title">${esc(it.title)}</div>
-        ${it.note?`<div class="note">${esc(it.note)}</div>`:""}
-      </div>
-      <div class="actions">
-        <button class="btn go sm" onclick="claim('${it.id}')">I'll bring this</button>
-        ${it.broughtBy===null ? `<button class="btn ghost sm" onclick="removeItem('${it.id}')" title="Remove">✕</button>`:""}
-      </div>
-    </div>`).join("") : `<div class="empty">Nothing outstanding — nice! 🎉</div>`;
+  const rsvp = '<section class="card" aria-labelledby="rsvp-h">' +
+      '<div class="rsvp-head"><h2 class="card-title" id="rsvp-h">Who\'s coming</h2>' +
+        '<span class="hint">' + heads + " including guests</span></div>" +
+      rsvpControls + chips +
+    "</section>";
 
-  const coveredHtml = covered.length ? covered.map(it => `
-    <div class="item got">
-      <div class="body">
-        <div class="title">${esc(it.title)}</div>
-        ${it.note?`<div class="note">${esc(it.note)}</div>`:""}
-        <div class="by">✓ ${esc(it.broughtBy)}${it.broughtBy===state.me?" (you)":""}</div>
-      </div>
-      <div class="actions">
-        ${it.broughtBy===state.me ? `<button class="btn sm ghost" onclick="cancelClaim('${it.id}')">Cancel</button>`:""}
-      </div>
-    </div>`).join("") : `<div class="empty">No one's claimed anything yet.</div>`;
+  /* Still needed */
+  const neededList = needed.length
+    ? '<ul class="need-list">' + needed.map(it =>
+        '<li class="need-item"><div class="body">' +
+          '<p class="t">' + esc(it.title) + "</p>" +
+          (it.note ? '<p class="n">' + esc(it.note) + "</p>" : "") +
+        '</div><div class="acts">' +
+          '<button type="button" class="btn go sm" data-act="claim" data-id="' + esc(it.id) + '">I\'ll bring this</button>' +
+          '<button type="button" class="iconbtn" data-act="remove-item" data-id="' + esc(it.id) + '" ' +
+            'aria-label="Remove ' + esc(it.title) + ' from the list"><span aria-hidden="true">✕</span></button>' +
+        "</div></li>").join("") + "</ul>"
+    : '<p class="empty">Nothing outstanding — the list is covered.</p>';
 
-  const bringingHtml = `
-      <div class="toolbar">
-        <span class="pillstat need">${need} still needed</span>
-        <span class="pillstat got">${got} covered</span>
-      </div>
+  /* Being brought */
+  const coveredList = covered.length
+    ? '<ul class="flat">' + covered.map(it =>
+        '<li><span class="check" aria-hidden="true">✓</span><div class="body">' +
+          '<p class="t">' + esc(it.title) + "</p>" +
+          '<p class="who">' + esc(it.broughtBy) + esc(you(it.broughtBy)) + "</p>" +
+          (it.note ? '<p class="n">' + esc(it.note) + "</p>" : "") +
+        "</div>" +
+        (it.broughtBy === state.me
+          ? '<button type="button" class="btn quiet sm" data-act="cancel-claim" data-id="' + esc(it.id) + '">Unclaim</button>'
+          : "") +
+        "</li>").join("") + "</ul>"
+    : '<p class="empty">No one has claimed anything yet.</p>';
 
-      ${rsvpHtml}
+  /* Packing lists — yours first, everyone can look, only owners can edit */
+  const owners = [...new Set(personal.map(i => i.owner).filter(Boolean))];
+  owners.sort((a,b) => (a === state.me ? -1 : 0) - (b === state.me ? -1 : 0));
+  const packList = personal.length
+    ? '<div class="pack-list">' + owners.map(o => {
+        const isMine = o === state.me;
+        const its = personal.filter(i => i.owner === o);
+        return '<div class="pack">' +
+          '<div class="pack-head">' + esc(o) + (isMine ? " (you)" : "") +
+            '<span class="tag">' + (isMine ? "Yours" : "View only") + "</span></div>" +
+          '<ul class="chips">' + its.map(i =>
+            '<li class="pchip' + (isMine ? "" : " plain") + '">' + esc(i.title) +
+            (isMine
+              ? '<button type="button" class="iconbtn x" data-act="remove-item" data-id="' + esc(i.id) + '" ' +
+                'aria-label="Remove ' + esc(i.title) + ' from your packing list"><span aria-hidden="true">✕</span></button>'
+              : "") + "</li>").join("") + "</ul>" +
+        "</div>";
+      }).join("") + "</div>"
+    : '<p class="empty">No packing lists yet — add your own gear with “Add something”.</p>';
 
-      <div class="section-title">Still needed</div>
-      ${neededHtml}
+  /* Add form (hidden until asked for) */
+  const packing = state.ui.addMode === "packing";
+  const addBlock = state.ui.addOpen
+    ? '<div class="card" style="margin-top:8px">' +
+        '<p class="card-title">Add something</p>' +
+        '<div class="seg" role="group" aria-label="What kind of thing are you adding?" style="margin-top:10px">' +
+          '<button type="button" class="seg-btn" aria-pressed="' + (!packing) + '" data-act="add-mode" data-mode="group">For the group</button>' +
+          '<button type="button" class="seg-btn" aria-pressed="' + packing + '" data-act="add-mode" data-mode="packing">My packing</button>' +
+        "</div>" +
+        '<p class="hint" style="margin-top:8px">' + (packing
+          ? "Your own gear to pack. Everyone can see it, but only you can change it."
+          : "Something the group needs, or that you'll bring for everyone.") + "</p>" +
+        '<form data-form="add-item" novalidate>' +
+          '<div class="field" style="margin-top:14px">' +
+            '<label class="fld" for="it-title">' + (packing ? "What are you packing?" : "Item") + "</label>" +
+            '<input type="text" id="it-title" placeholder="' + (packing ? "e.g. Sleeping bag" : "e.g. Floor pump") + '">' +
+          "</div>" +
+          '<div class="field">' +
+            '<label class="fld" for="it-note">Note <span class="hint">(optional)</span></label>' +
+            '<input type="text" id="it-note" placeholder="' + (packing ? "e.g. borrowed from Ali" : "e.g. enough for ten") + '">' +
+          "</div>" +
+          errHtml() +
+          '<div class="actions-row">' +
+            (packing
+              ? '<button type="submit" class="btn primary" data-kind="pack">Add to my packing list</button>'
+              : '<button type="submit" class="btn" data-kind="need">Add as needed</button>' +
+                '<button type="submit" class="btn go" data-kind="bring">I\'m bringing this</button>') +
+          "</div>" +
+          '<div style="margin-top:10px"><button type="button" class="btn quiet block" data-act="toggle-add" data-open="0">Cancel</button></div>' +
+        "</form>" +
+      "</div>"
+    : '<button type="button" class="btn primary block" data-act="toggle-add" data-open="1" style="margin-top:8px">Add something</button>';
 
-      <div class="section-title">Being brought</div>
-      ${coveredHtml}
+  return '<div class="section" style="margin-top:16px">' +
+      '<div class="chips">' +
+        '<span class="pill need">' + need + " still needed</span>" +
+        '<span class="pill got">' + got + " covered</span>" +
+      "</div>" +
+    "</div>" +
+    '<div style="height:14px"></div>' + rsvp +
+    '<section class="section" aria-labelledby="need-h">' +
+      '<div class="section-head"><h2 id="need-h">Still needed</h2><span class="count">' + need + "</span></div>" +
+      neededList +
+    "</section>" +
+    '<section class="section" aria-labelledby="got-h">' +
+      '<div class="section-head"><h2 id="got-h">Being brought</h2><span class="count">' + got + "</span></div>" +
+      coveredList +
+    "</section>" +
+    '<section class="section" aria-labelledby="pack-h">' +
+      '<div class="section-head"><h2 id="pack-h">Packing lists</h2>' +
+        '<span class="count">' + owners.length + (owners.length === 1 ? " person" : " people") + "</span></div>" +
+      packList +
+    "</section>" +
+    '<div class="section">' + addBlock + "</div>";
+}
 
-      <div class="section-title">Packing lists</div>
-      ${packHtml}
+/* ---------- travel tab ---------- */
+function methodOptions(selected){
+  return '<option value="">Not sure yet</option>' + TRAVEL_METHODS.map(m =>
+    '<option value="' + esc(m) + '"' + (m === selected ? " selected" : "") + ">" + esc(m) + "</option>").join("");
+}
 
-      <div class="card" style="margin-top:22px">
-        <div style="font-weight:700; margin-bottom:2px">➕ Add something</div>
-        <div class="seg">
-          <button id="seg-group" class="seg-btn active" onclick="setAddMode('group')">For the group</button>
-          <button id="seg-pack" class="seg-btn" onclick="setAddMode('packing')">My packing</button>
-        </div>
-        <div class="hint" id="add-hint">Something the group needs, or that you'll bring for everyone.</div>
-        <label class="fld" for="it-title">Item</label>
-        <input id="it-title" placeholder="e.g. Floor pump" onkeydown="if(event.key==='Enter')addItem('need')">
-        <label class="fld" for="it-note">Note (optional)</label>
-        <input id="it-note" placeholder="e.g. for everyone">
-        <div style="height:12px"></div>
-        <div class="row" id="grp-btns">
-          <button class="btn block" onclick="addItem('need')">Add as needed</button>
-          <button class="btn go block" onclick="addItem('bring')">I'm bringing this</button>
-        </div>
-        <div id="pack-btns" style="display:none">
-          <button class="btn primary block" onclick="addPersonal()">Add to my packing list</button>
-        </div>
-      </div>`;
+function legHtml(label, leg, dir){
+  const when = [leg.date ? fmtDateShort(leg.date) : "", leg.time ? fmtTime(leg.time) : ""].filter(Boolean).join(" · ");
+  const how = [leg.method, leg.place ? (dir === "from" ? "from " + leg.place : "to " + leg.place) : ""].filter(Boolean).join(" ");
+  return '<div class="tleg"><div class="lbl">' + label + "</div><div class=\"val\">" +
+    '<p class="main">' + (when ? esc(when) : '<span class="tnone" style="margin:0">Date not set</span>') + "</p>" +
+    (how ? '<p class="det">' + esc(how) + "</p>" : "") +
+    (leg.details ? '<p class="det">' + esc(leg.details) + "</p>" : "") +
+  "</div></div>";
+}
 
-  const tab = state.tab === "costs" ? "costs" : "bringing";
+function travelCard(ev, entry){
+  const {name, plan} = entry;
+  const isMe = name === state.me;
+  const att = attendeesOf(ev).find(a => a && a.name === name);
+  const guests = att && Number(att.guests) ? Number(att.guests) : 0;
+  const has = planHasContent(plan);
 
-  app().innerHTML = `
-    <header>
-      <div class="back" onclick="go('home')">‹ All events</div>
-      <div class="hrow">
-        <div><h1>${esc(ev.name)}</h1><p class="sub">${esc(ev.when||"")}${ev.where?" · "+esc(ev.where):""}</p></div>
-        <div class="who"><b>${esc(state.me)}</b></div>
-      </div>
-      <div class="share">
-        🔗 ${CLOUD ? "Share link" : "Invite code"} ${CLOUD ? "" : `<span class="code">${esc(ev.id)}</span>`}
-        <button class="btn sm ghost" onclick="copyInvite()">Copy ${CLOUD ? "link" : "invite"}</button>
-        <span>${CLOUD ? "· anyone who opens it shares this live list" : "· this list stays on this device — others can't open it"}</span>
-      </div>
-    </header>
-    <div class="wrap">
-      <div class="tabs">
-        <button class="tab-btn ${tab==="bringing"?"active":""}" onclick="setTab('bringing')">Bringing</button>
-        <button class="tab-btn ${tab==="costs"?"active":""}" onclick="setTab('costs')">Costs</button>
-      </div>
-      ${tab==="costs" ? renderCosts(ev) : bringingHtml}
-    </div>`;
+  const head = '<div class="tcard-head">' +
+      '<p class="tcard-name">' + esc(name) + (isMe ? " (you)" : "") +
+        (guests ? ' <span class="tag">+' + guests + (guests === 1 ? " guest" : " guests") + "</span>" : "") + "</p>" +
+      (isMe
+        ? '<button type="button" class="btn sm" data-act="travel-edit" data-open="1">' +
+            (has ? "Edit" : "Add mine") +
+            '<span class="sr-only"> my travel plan</span></button>'
+        : "") +
+    "</div>";
+
+  if(!has){
+    return '<article class="tcard' + (isMe ? " mine" : "") + '">' + head +
+      '<p class="tnone">Travel plan not added yet.</p>' +
+      (guests ? '<p class="tsub">Guests are travelling with ' + esc(name) + ".</p>" : "") +
+    "</article>";
+  }
+
+  const ride = [];
+  if(plan.ride.offer) ride.push('<span class="pill got">Can offer a ride</span>');
+  if(plan.ride.need)  ride.push('<span class="pill need">Needs a ride</span>');
+  const rideNote = plan.ride.note ? '<p class="det" style="flex:1 1 100%; margin:0">' + esc(plan.ride.note) + "</p>" : "";
+
+  return '<article class="tcard' + (isMe ? " mine" : "") + '">' + head +
+    (legHasContent(plan.arrive) ? legHtml("Arriving", plan.arrive, "from") : "") +
+    (legHasContent(plan.depart) ? legHtml("Heading home", plan.depart, "to") : "") +
+    (ride.length || rideNote ? '<div class="tride">' + ride.join("") + rideNote + "</div>" : "") +
+    (guests ? '<p class="tsub">Travelling with ' + guests + (guests === 1 ? " guest" : " guests") + ".</p>" : "") +
+  "</article>";
+}
+
+function travelEditor(ev, plan){
+  const p = plan || normalizePlan(null);
+  const a = p.arrive, d = p.depart;
+  return '<form class="card" data-form="travel" novalidate>' +
+    '<p class="card-title">My travel plan</p>' +
+    '<p class="hint" style="margin-top:4px">Only you can edit this. Everyone in the event can see it.</p>' +
+
+    '<fieldset class="fieldset" style="margin-top:16px"><legend>Arriving</legend>' +
+      '<div class="row" style="margin-top:12px">' +
+        '<div><label class="fld" for="tv-arrive-date">Arrival date</label>' +
+          '<input type="date" id="tv-arrive-date" value="' + esc(a.date) + '"></div>' +
+        '<div><label class="fld" for="tv-arrive-time">Approximate time</label>' +
+          '<input type="time" id="tv-arrive-time" value="' + esc(a.time) + '"></div>' +
+      "</div>" +
+      '<div class="row" style="margin-top:14px">' +
+        '<div><label class="fld" for="tv-arrive-method">How you\'re travelling</label>' +
+          '<select id="tv-arrive-method">' + methodOptions(a.method) + "</select></div>" +
+        '<div><label class="fld" for="tv-arrive-from">Coming from</label>' +
+          '<input type="text" id="tv-arrive-from" placeholder="e.g. Vancouver" value="' + esc(a.place) + '"></div>' +
+      "</div>" +
+      '<div class="field">' +
+        '<label class="fld" for="tv-arrive-details">Details <span class="hint">(optional)</span></label>' +
+        '<textarea id="tv-arrive-details" placeholder="Ferry route, flight number, meeting point, car and spare seats…">' + esc(a.details) + "</textarea>" +
+      "</div>" +
+    "</fieldset>" +
+
+    '<fieldset class="fieldset"><legend>Heading home</legend>' +
+      '<div class="row" style="margin-top:12px">' +
+        '<div><label class="fld" for="tv-depart-date">Departure date</label>' +
+          '<input type="date" id="tv-depart-date" value="' + esc(d.date) + '"></div>' +
+        '<div><label class="fld" for="tv-depart-time">Approximate time</label>' +
+          '<input type="time" id="tv-depart-time" value="' + esc(d.time) + '"></div>' +
+      "</div>" +
+      '<div class="row" style="margin-top:14px">' +
+        '<div><label class="fld" for="tv-depart-method">How you\'re travelling</label>' +
+          '<select id="tv-depart-method">' + methodOptions(d.method) + "</select></div>" +
+        '<div><label class="fld" for="tv-depart-to">Going to</label>' +
+          '<input type="text" id="tv-depart-to" placeholder="e.g. home to Seattle" value="' + esc(d.place) + '"></div>' +
+      "</div>" +
+      '<div class="field">' +
+        '<label class="fld" for="tv-depart-details">Details <span class="hint">(optional)</span></label>' +
+        '<textarea id="tv-depart-details" placeholder="Return sailing, flight number, drop-offs on the way…">' + esc(d.details) + "</textarea>" +
+      "</div>" +
+    "</fieldset>" +
+
+    '<fieldset class="fieldset"><legend>Rides <span class="hint" style="font-weight:400">(optional)</span></legend>' +
+      '<div class="cbx-list" style="margin-top:12px" role="group" aria-describedby="tv-ride-hint">' +
+        '<label class="cbx' + (p.ride.offer ? " on" : "") + '"><input type="checkbox" id="tv-ride-offer"' + (p.ride.offer ? " checked" : "") + ">I can offer a ride</label>" +
+        '<label class="cbx' + (p.ride.need ? " on" : "") + '"><input type="checkbox" id="tv-ride-need"' + (p.ride.need ? " checked" : "") + ">I need a ride</label>" +
+      "</div>" +
+      '<p class="hint" id="tv-ride-hint" style="margin-top:8px">Tick both if they apply to different parts of the trip — ' +
+        "say which direction in the note below.</p>" +
+      '<div class="field">' +
+        '<label class="fld" for="tv-ride-note">Ride note <span class="hint">(optional)</span></label>' +
+        '<input type="text" id="tv-ride-note" placeholder="e.g. two spare seats, leaving Friday lunchtime" value="' + esc(p.ride.note) + '">' +
+      "</div>" +
+    "</fieldset>" +
+
+    errHtml() +
+    '<div class="actions-row">' +
+      '<button type="submit" class="btn primary">Save travel plan</button>' +
+      '<button type="button" class="btn quiet" data-act="travel-edit" data-open="0">Cancel</button>' +
+    "</div>" +
+    (planHasContent(plan)
+      ? '<div style="margin-top:10px"><button type="button" class="btn danger block" data-act="travel-remove">Remove my travel plan</button></div>'
+      : "") +
+  "</form>";
+}
+
+function viewTravel(ev){
+  const people = travelPeople(ev);
+  const myPlan = planFor(ev, state.me);
+  const editing = state.ui.travelEditing;
+
+  const intro = editing ? "" :
+    '<div class="card" style="margin-top:16px">' +
+      '<p class="card-title">' + (planHasContent(myPlan) ? "Your travel plan" : "Add your travel plan") + "</p>" +
+      '<p class="hint" style="margin-top:4px">' + (planHasContent(myPlan)
+        ? "Keep it up to date so people can line up lifts and arrival times."
+        : "Let everyone know when you're arriving and heading home. Guests travel with you — no separate plan needed.") + "</p>" +
+      '<div style="margin-top:14px"><button type="button" class="btn primary block" data-act="travel-edit" data-open="1">' +
+        (planHasContent(myPlan) ? "Edit my travel plan" : "Add my travel plan") + "</button></div>" +
+    "</div>";
+
+  const cards = people
+    .filter(p => !(editing && p.name === state.me))
+    .map(p => travelCard(ev, p)).join("");
+
+  return intro +
+    (editing ? '<div style="margin-top:16px">' + travelEditor(ev, myPlan) + "</div>" : "") +
+    '<section class="section" aria-labelledby="travel-h">' +
+      '<div class="section-head"><h2 id="travel-h">Everyone\'s travel</h2>' +
+        '<span class="count">' + people.length + (people.length === 1 ? " person" : " people") + "</span></div>" +
+      (cards || '<p class="empty">No one has added travel details yet.</p>') +
+    "</section>";
 }
 
 /* ---------- costs tab ---------- */
-function renderCosts(ev){
+function viewCosts(ev){
   const exps = expensesOf(ev);
   const su = settleUp(ev);
+  const plan = settlePlan(su.rows);
+  const mineRow = su.rows.find(r => r.name === state.me);
+  const myBal = mineRow ? mineRow.bal : 0;
 
-  const sumHtml = su.count ? `<div class="sumcard">
-      <div class="sumtop">
-        <div class="big">${money(su.total)}</div>
-        <div class="per">spent so far${su.settledTotal>0?` · ${money(su.settledTotal)} already settled`:""}</div>
-      </div>
-      ${su.rows.length ? su.rows.map(r=>{
-        const cls = Math.abs(r.bal)<0.01?"even":(r.bal>0?"pos":"neg");
-        const lbl = Math.abs(r.bal)<0.01?"all square":(r.bal>0?`gets back ${money(r.bal)}`:`owes ${money(-r.bal)}`);
-        return `<div class="sumrow"><div class="nm">${esc(r.name)}${r.name===state.me?" (you)":""}<span class="paid">paid ${money(r.paid)}</span></div><div class="bal ${cls}">${lbl}</div></div>`;
-      }).join("") : `<div class="hint" style="margin-top:8px">Everything's been settled — no balances outstanding.</div>`}
-      <div class="hint" style="margin-top:8px">Each unsettled expense is split equally between the people it's shared with. Settled ones still show below, but they're left out of these balances.</div>
-    </div>` : "";
+  const totals = su.count
+    ? '<div class="totals" style="margin-top:16px">' +
+        '<div class="tot"><p class="k">Total spent</p><p class="v">' + money(su.total) + "</p>" +
+          (su.settledTotal > 0 ? '<p class="hint" style="margin-top:2px">' + money(su.settledTotal) + " already settled</p>" : "") +
+        "</div>" +
+        '<div class="tot"><p class="k">' +
+            (myBal > 0.005 ? "You're owed" : myBal < -0.005 ? "You owe" : "Your balance") + "</p>" +
+          '<p class="v ' + (myBal > 0.005 ? "pos" : myBal < -0.005 ? "neg" : "") + '">' +
+            (Math.abs(myBal) < 0.005 ? "All square" : money(Math.abs(myBal))) + "</p></div>" +
+      "</div>"
+    : "";
 
-  const listHtml = exps.length ? exps.map(x=>{
-    const split = (x.splitBetween||[]);
-    const detail = x.settled
-      ? `<span class="badge">Settled</span>`
-      : `Split between ${split.length ? split.map(n=>esc(n)+(n===state.me?" (you)":"")).join(", ") : "—"}`;
-    return `<div class="item exp${x.settled?" settled":""}">
-      <div class="body">
-        <div class="title">${esc(x.title)}</div>
-        <div class="note">Paid by ${esc(x.paidBy)}${x.paidBy===state.me?" (you)":""}</div>
-        <div class="note" style="margin-top:4px">${detail}</div>
-      </div>
-      <div class="actions">
-        <div class="amt">${money(x.amount)}</div>
-        ${x.paidBy===state.me ? `<button class="btn ghost sm" onclick="removeExpense('${x.id}')" title="Remove">✕</button>`:""}
-      </div>
-    </div>`;
-  }).join("") : `<div class="empty">No expenses yet — add the first one below.</div>`;
+  const balances = su.rows.length
+    ? '<section class="section" aria-labelledby="bal-h">' +
+        '<div class="section-head"><h2 id="bal-h">Balances</h2><span class="count">unsettled only</span></div>' +
+        '<div class="panel">' + su.rows.map(r => {
+          const cls = Math.abs(r.bal) < 0.005 ? "even" : (r.bal > 0 ? "pos" : "neg");
+          const lbl = Math.abs(r.bal) < 0.005 ? "all square" : (r.bal > 0 ? "gets back " + money(r.bal) : "owes " + money(-r.bal));
+          return '<div class="balrow"><div class="nm">' + esc(r.name) + esc(you(r.name)) +
+            '<span class="paid">paid ' + money(r.paid) + " · share " + money(r.owed) + "</span></div>" +
+            '<div class="bal ' + cls + '">' + lbl + "</div></div>";
+        }).join("") + "</div>" +
+      "</section>"
+    : "";
 
-  // you're always in the list, whether or not you've RSVP'd
-  const people = [...new Set([state.me, ...attendeesOf(ev).map(a=>a.name)])];
-  const paidByHtml = people.map(n=>
-    `<option value="${esc(n)}"${n===state.me?" selected":""}>${esc(n)}${n===state.me?" (you)":""}</option>`).join("");
-  const splitHtml = people.map(n=>
-    `<label class="cbx"><input type="checkbox" data-name="${esc(n)}" checked>${esc(n)}${n===state.me?" (you)":""}</label>`).join("");
+  const settle = plan.length
+    ? '<section class="section" aria-labelledby="settle-h">' +
+        '<div class="section-head"><h2 id="settle-h">Settle up</h2>' +
+          '<span class="count">' + plan.length + (plan.length === 1 ? " payment" : " payments") + "</span></div>" +
+        '<ul class="panel settle">' + plan.map(p =>
+          "<li><span>" + esc(p.from) + esc(you(p.from)) + " pays " + esc(p.to) + esc(you(p.to)) + "</span>" +
+          '<span class="amt">' + money(p.amt) + "</span></li>").join("") + "</ul>" +
+        '<p class="hint" style="margin:10px 2px 0">Settled expenses stay in the list below but are left out of these balances. ' +
+          'Mark an expense settled once it has been paid back.</p>' +
+      "</section>"
+    : (su.count
+        ? '<section class="section"><div class="section-head"><h2>Settle up</h2></div>' +
+          '<p class="empty">Everyone is square — nothing to pay back.</p></section>'
+        : "");
 
-  return `
-      ${sumHtml}
+  const list = exps.length
+    ? '<ul class="exp-list">' + exps.map(x => {
+        const split = (x.splitBetween || []).filter(Boolean);
+        const detail = split.length
+          ? "Split between " + split.map(n => esc(n) + esc(you(n))).join(", ")
+          : "No one selected to split with";
+        const isPayer = x.paidBy === state.me;
+        return '<li class="exp' + (x.settled ? " settled" : "") + '"><div class="body">' +
+            '<p class="t">' + esc(x.title) + (x.settled ? ' <span class="badge">Settled</span>' : "") + "</p>" +
+            '<p class="n">Paid by ' + esc(x.paidBy) + esc(you(x.paidBy)) + "</p>" +
+            '<p class="n">' + detail + "</p>" +
+            (isPayer ? '<p style="margin-top:8px"><button type="button" class="linkbtn" data-act="toggle-settled" data-id="' +
+                esc(x.id) + '">' + (x.settled ? "Mark as unsettled" : "Mark as settled") + "</button></p>" : "") +
+          "</div>" +
+          '<div class="side"><span class="amt">' + money(x.amount) + "</span>" +
+            (isPayer ? '<button type="button" class="iconbtn" data-act="remove-expense" data-id="' + esc(x.id) + '" ' +
+              'aria-label="Remove expense ' + esc(x.title) + '"><span aria-hidden="true">✕</span></button>' : "") +
+          "</div></li>";
+      }).join("") + "</ul>"
+    : '<p class="empty">No expenses yet — add the first one below.</p>';
 
-      <div class="section-title">Expenses</div>
-      ${listHtml}
+  /* You're always in the people list, whether or not you've RSVP'd. */
+  const people = [...new Set([state.me, ...attendeesOf(ev).map(a => a && a.name),
+                              ...exps.map(x => x && x.paidBy)].filter(Boolean))];
+  const addBlock = state.ui.expOpen
+    ? '<form class="card" data-form="expense" novalidate style="margin-top:8px">' +
+        '<p class="card-title">Add expense</p>' +
+        '<p class="hint" style="margin-top:4px">Something you paid for that the group shares.</p>' +
+        '<div class="field" style="margin-top:14px">' +
+          '<label class="fld" for="ex-title">Description</label>' +
+          '<input type="text" id="ex-title" placeholder="e.g. Drinks run">' +
+        "</div>" +
+        '<div class="row" style="margin-top:14px">' +
+          '<div><label class="fld" for="ex-amount">Amount</label>' +
+            '<input type="number" id="ex-amount" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>' +
+          '<div><label class="fld" for="ex-paidby">Paid by</label><select id="ex-paidby">' +
+            people.map(n => '<option value="' + esc(n) + '"' + (n === state.me ? " selected" : "") + ">" +
+              esc(n) + esc(you(n)) + "</option>").join("") + "</select></div>" +
+        "</div>" +
+        '<div class="field"><span class="fld" id="ex-split-lbl">Split between</span>' +
+          '<div class="cbx-list" id="ex-split" role="group" aria-labelledby="ex-split-lbl">' +
+            people.map(n => {
+              const id = "ex-split-" + slug(n);
+              return '<label class="cbx on" for="' + id + '"><input type="checkbox" id="' + id + '" data-name="' + esc(n) + '" checked>' +
+                esc(n) + esc(you(n)) + "</label>";
+            }).join("") + "</div></div>" +
+        '<div class="field">' +
+          '<label class="cbx stack" for="ex-settled"><input type="checkbox" id="ex-settled">Already paid back / settled</label>' +
+        "</div>" +
+        errHtml() +
+        '<div class="actions-row">' +
+          '<button type="submit" class="btn primary">Add expense</button>' +
+          '<button type="button" class="btn quiet" data-act="toggle-exp" data-open="0">Cancel</button>' +
+        "</div>" +
+      "</form>"
+    : '<button type="button" class="btn primary block" data-act="toggle-exp" data-open="1" style="margin-top:8px">Add expense</button>';
 
-      <div class="card" style="margin-top:22px">
-        <div style="font-weight:700; margin-bottom:2px">➕ Add expense</div>
-        <div class="hint">Something you paid for that the group shares.</div>
-        <label class="fld" for="ex-title">Description</label>
-        <input id="ex-title" placeholder="e.g. Drinks run" onkeydown="if(event.key==='Enter')addExpense()">
-        <div class="row">
-          <div><label class="fld" for="ex-amount">Amount</label>
-            <input id="ex-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="$"></div>
-          <div><label class="fld" for="ex-paidby">Paid by</label>
-            <select id="ex-paidby">${paidByHtml}</select></div>
-        </div>
-        <label class="fld">Split between</label>
-        <div class="split-grid" id="ex-split">${splitHtml}</div>
-        <div style="height:12px"></div>
-        <label class="cbx"><input type="checkbox" id="ex-settled">Already paid / settled</label>
-        <div style="height:12px"></div>
-        <button class="btn primary block" onclick="addExpense()">Add expense</button>
-      </div>`;
+  return totals + balances + settle +
+    '<section class="section" aria-labelledby="exp-h">' +
+      '<div class="section-head"><h2 id="exp-h">Expenses</h2>' +
+        '<span class="count">' + exps.length + (exps.length === 1 ? " item" : " items") + "</span></div>" +
+      list +
+    "</section>" +
+    '<div class="section">' + addBlock + "</div>";
 }
 
-function changeName(){ state.me = null; save(); render(); }
+/* ============================================================
+   Events wiring — one delegated listener for the whole app
+   ============================================================ */
+document.addEventListener("click", e => {
+  const undoBtn = e.target.closest("#toast-action");
+  if(undoBtn){ const fn = toastAction; hideToast(); if(fn) fn(); return; }
 
-/* ---------- boot ---------- */
+  const el = e.target.closest("[data-act]");
+  if(!el) return;
+  const act = el.dataset.act;
+  const id = el.dataset.id;
+  const open = el.dataset.open === "1";
+
+  switch(act){
+    case "change-name":      changeName(); break;
+    case "confirm-name":     confirmClashName(); break;
+    case "cancel-name":      cancelClashName(); break;
+    case "toggle-new-event": state.ui.newEventOpen = open; state.ui.error = null; render();
+                             if(open) focusEl("ev-name"); break;
+    case "go-event":         go("event", id); break;
+    case "go-home":          go("home"); break;
+    case "share":            shareInvite(); break;
+    case "copy-link":        copyInvite(); break;
+    case "set-tab":          setTab(el.dataset.tab); break;
+    case "rsvp-in":          rsvpIn(); break;
+    case "rsvp-out":         rsvpOut(); break;
+    case "guests":           setGuests(Number(el.dataset.d) || 0); break;
+    case "toggle-add":       toggleAdd(open); break;
+    case "add-mode":         setAddMode(el.dataset.mode); break;
+    case "claim":            claim(id); break;
+    case "cancel-claim":     cancelClaim(id); break;
+    case "remove-item":      removeItem(id); break;
+    case "travel-edit":      editTravel(open); break;
+    case "travel-remove":    removeTravel(); break;
+    case "toggle-exp":       toggleExp(open); break;
+    case "remove-expense":   removeExpense(id); break;
+    case "toggle-settled":   toggleSettled(id); break;
+  }
+});
+
+document.addEventListener("submit", e => {
+  const form = e.target.closest("[data-form]");
+  if(!form) return;
+  e.preventDefault();
+  switch(form.dataset.form){
+    case "set-name":     submitName(val("name-in")); break;
+    case "create-event": createEvent(); break;
+    case "add-item":     addItem((e.submitter && e.submitter.dataset.kind) || "need"); break;
+    case "travel":       saveTravel(); break;
+    case "expense":      addExpense(); break;
+  }
+});
+
+/* keep the pill-style checkboxes in step with their state */
+document.addEventListener("change", e => {
+  const box = e.target;
+  if(box.type !== "checkbox") return;
+  const label = box.closest(".cbx");
+  if(label) label.classList.toggle("on", box.checked);
+});
+
+/* tablist keyboard support */
+document.addEventListener("keydown", e => {
+  const tab = e.target.closest('[role="tab"]');
+  if(!tab) return;
+  const order = ["bringing","travel","costs"];
+  const i = order.indexOf(tab.dataset.tab);
+  let next = null;
+  if(e.key === "ArrowRight" || e.key === "ArrowDown") next = order[(i + 1) % order.length];
+  else if(e.key === "ArrowLeft" || e.key === "ArrowUp") next = order[(i - 1 + order.length) % order.length];
+  else if(e.key === "Home") next = order[0];
+  else if(e.key === "End")  next = order[order.length - 1];
+  if(next){ e.preventDefault(); setTab(next); }
+});
+
+/* Esc closes the toast (and cancels a pending undo cleanly) */
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideToast(); });
+
+/* ============================================================
+   Boot
+   ============================================================ */
 const local = loadLocal();
 state.me = local.me || null;
 state.view = local.view || "home";
 state.currentId = local.currentId || null;
+state.tab = ["bringing","travel","costs"].includes(local.tab) ? local.tab : "bringing";
+
+/* Shared links carry #e=<event id> so they open straight into the event. */
+const hashMatch = /[#&]e=([A-Za-z0-9_-]+)/.exec(location.hash || "");
+if(hashMatch){ state.currentId = hashMatch[1]; state.view = "event"; }
 
 if(CLOUD){
-  document.querySelector(".banner").innerHTML =
-    '🟢 <b>Live</b> — everyone with this link shares the same list. Updates appear automatically.';
   render();
   cloudLoad();
   subscribeRT();
 } else {
-  document.querySelector(".banner").innerHTML =
-    '🎈 <b>Demo</b> — saves on this device only. Add your Supabase keys in config.js to make it live &amp; shared.';
   state.events = loadDemoEvents();
   render();
 }
